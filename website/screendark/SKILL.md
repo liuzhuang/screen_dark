@@ -10,11 +10,11 @@ Operate ScreenDark only after the user explicitly asks to change a display. Trea
 ## Darken a display
 
 1. Check that ScreenDark is installed. If needed, launch it with `open -b com.liuzhuang.thanoslight`.
-2. Open the `Screen Dark` menu bar item.
+2. Open the `ScreenDark` menu bar item.
 3. Identify the requested built-in or external display.
 4. Click that display to switch it to dark.
 
-If the user asks to darken every display, warn that Computer Use will lose visual feedback until the recovery shortcut is pressed.
+If the user asks to darken every display, keep the recovery shortcut available. ScreenDark leaves the session unlocked so Computer Use can continue, but visual feedback still depends on its capture path.
 
 ## Restore displays
 

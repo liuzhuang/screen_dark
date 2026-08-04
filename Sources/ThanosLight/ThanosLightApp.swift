@@ -8,7 +8,7 @@ struct ThanosLightApp: App {
     @StateObject private var displayStore = DisplayStore()
 
     var body: some Scene {
-        MenuBarExtra("Screen Dark", systemImage: "sun.min.fill") {
+        MenuBarExtra("ScreenDark", systemImage: "sun.min.fill") {
             DisplayMenu(store: displayStore)
         }
         .menuBarExtraStyle(.window)
@@ -255,7 +255,7 @@ private struct DisplayMenu: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text("Screen Dark")
+                Text("ScreenDark")
                     .font(.title2.bold())
                 Spacer()
                 Button {
@@ -290,7 +290,7 @@ private struct DisplayMenu: View {
             HStack(spacing: 24) {
                 Label("Fn+F1/F2 由 macOS 调节", systemImage: "keyboard")
                     .foregroundStyle(.secondary)
-                    .help("调整系统亮度会自动点亮已暗屏的显示器")
+                    .help("调整系统亮度会自动点亮已变暗的显示器")
                 Spacer(minLength: 12)
                 Label(
                     store.recoveryHelperReady ? "安全守护已就绪" : "安全守护未就绪",
@@ -356,7 +356,7 @@ private struct DisplayControlCard: View {
     }
 
     private var actionTitle: String {
-        isDark ? "点亮" : "暗屏"
+        isDark ? "点亮" : "变暗"
     }
 
     private var artworkName: String {
@@ -406,7 +406,11 @@ private struct DisplayControlCard: View {
             }
             .buttonStyle(.plain)
             .disabled(!canToggle)
-            .help(canToggle ? "点击显示器\(actionTitle)" : "安全守护未就绪，不能让全部屏幕暗屏")
+            .help(
+                canToggle
+                    ? (isDark ? "点击点亮显示器" : "点击让显示器变暗")
+                    : "安全守护未就绪，不能让全部屏幕变暗"
+            )
             .accessibilityLabel("\(actionTitle)\(display.name)")
             .accessibilityHint("点击屏幕切换明暗")
 
@@ -629,7 +633,7 @@ private final class DisplayStore: ObservableObject {
             currentBrightness: current,
             recoveryReady: helperReady
         ) else {
-            statusMessage = "安全守护未就绪，已阻止将最后一块亮屏设为暗屏"
+            statusMessage = "安全守护未就绪，已阻止最后一块亮屏变暗"
             return false
         }
         let currentBrightness = displays.first(where: { $0.id == displayID })?.brightness ?? 1
@@ -950,7 +954,7 @@ private final class DisplayStore: ObservableObject {
             }
         )
         if !started {
-            statusMessage = "无法启动安全守护；不会允许全部屏幕暗屏"
+            statusMessage = "无法启动安全守护；不会允许全部屏幕变暗"
         }
     }
 
@@ -959,10 +963,10 @@ private final class DisplayStore: ObservableObject {
         let hadAdjustedDisplay = displays.contains(where: { $0.brightness < 1 })
         if hadAdjustedDisplay {
             if restoreSystemGammaAll() {
-                statusMessage = "安全守护意外停止，已自动点亮屏幕；重启应用后可再次暗屏"
+                statusMessage = "安全守护意外停止，已自动点亮屏幕；重启应用后可再次变暗"
             }
         } else {
-            statusMessage = "安全守护意外停止；重启应用后可再次暗屏"
+            statusMessage = "安全守护意外停止；重启应用后可再次变暗"
         }
     }
 
