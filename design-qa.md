@@ -1,4 +1,4 @@
-# Thanos Light Design QA
+# ScreenDark Design QA
 
 ## Evidence
 
@@ -46,15 +46,15 @@
 - Device imagery: the built-in display is a photoreal laptop and the external display is a photoreal monitor; no SF Symbol substitutes remain.
 - Background treatment: every device asset has a transparent exterior, so it inherits the native white menu surface instead of introducing a card-sized color block.
 - State treatment: bright and dark are separate screen images, not a tint over one generic card.
-- Interaction: the entire 214 pt device stage remains one button; the centered `暗屏` or `点亮` label is drawn dynamically and is not baked into the image.
+- Interaction: the entire 214 pt device stage remains one button; the centered `变暗` or `点亮` label is drawn dynamically and is not baked into the image.
 - Layout: both devices retain equal grid tracks, aligned metadata, percentage, slider, footer status, recovery action, and exit action.
 - Accessibility: the whole device button retains its label, hint, tooltip, and disabled safety state.
 
 ## Interaction and build evidence
 
-- In the live two-display run, clicking `27D1QL` changed it from `100% / 暗屏` to `0% / 点亮`; clicking again restored it to `100% / 暗屏`.
+- In the live two-display run, clicking `27D1QL` changed it from `100% / 变暗` to `0% / 点亮`; clicking again restored it to `100% / 变暗`.
 - The recovery helper reported `安全守护已就绪` during the run.
-- `swift test`: 4 tests passed, including all four image resources loading as valid `NSImage` instances.
+- `swift test`: 10 tests passed, including all four image resources loading as valid `NSImage` instances.
 - `swift build -c release`: passed; the release resource bundle contains all four PNG files.
 - `bash -n reinstall.sh` and both plist lint checks passed.
 
@@ -68,7 +68,7 @@
 - [x] Clicking the device toggles bright and dark states.
 - [x] No large display-card color blocks remain.
 - [x] Device image backgrounds are consistent and transparent.
-- [x] Action copy uses `暗屏`, `点亮`, and `点亮全部`.
+- [x] Action copy uses `变暗`, `点亮`, and `点亮全部`.
 - [x] Four resources are packaged, loadable, and included in Release.
 - [x] Tests and Release build pass.
 

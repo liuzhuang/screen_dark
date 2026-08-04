@@ -6,7 +6,8 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 INSTALL_DIR="${INSTALL_DIR:-${HOME}/Applications}"
 NO_LAUNCH="${NO_LAUNCH:-0}"
 SIGNING_IDENTITY="${SIGNING_IDENTITY:--}"
-APP_NAME="ThanosLight.app"
+APP_NAME="ScreenDark.app"
+LEGACY_APP_NAME="ThanosLight.app"
 BUNDLE_ID="com.liuzhuang.thanoslight"
 
 export CLANG_MODULE_CACHE_PATH="${CLANG_MODULE_CACHE_PATH:-${SCRIPT_DIR}/.build/clang-module-cache}"
@@ -27,20 +28,38 @@ if [[ "${INSTALL_DIR}" == "/" ]]; then
 fi
 
 TARGET_APP="${INSTALL_DIR}/${APP_NAME}"
-TMP_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/thanos-light-install.XXXXXX")"
+LEGACY_APP="${INSTALL_DIR}/${LEGACY_APP_NAME}"
+TMP_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/screen-dark-install.XXXXXX")"
 STAGED_APP="${TMP_ROOT}/${APP_NAME}"
-BACKUP_APP="${TMP_ROOT}/previous-${APP_NAME}"
+TARGET_BACKUP_APP="${TMP_ROOT}/previous-${APP_NAME}"
+LEGACY_BACKUP_APP="${TMP_ROOT}/previous-${LEGACY_APP_NAME}"
 HELPER_APP="${STAGED_APP}/Contents/Helpers/ThanosLightRecovery.app"
 HELPER_EXECUTABLE_PATH="${HELPER_APP}/Contents/MacOS/ThanosLightRecovery"
+TARGET_BACKED_UP=0
+LEGACY_BACKED_UP=0
+TARGET_REPLACEMENT_STARTED=0
 
 cleanup() {
     local status=$?
+    local recovery_failed=0
     trap - EXIT
-    if [[ ${status} -ne 0 && -e "${BACKUP_APP}" ]]; then
-        /bin/rm -rf -- "${TARGET_APP}"
-        /bin/mv -- "${BACKUP_APP}" "${TARGET_APP}"
+    set +e
+    if [[ ${status} -ne 0 ]]; then
+        if [[ ${TARGET_REPLACEMENT_STARTED} -eq 1 ]]; then
+            /bin/rm -rf -- "${TARGET_APP}"
+        fi
+        if [[ ${TARGET_BACKED_UP} -eq 1 && -e "${TARGET_BACKUP_APP}" ]]; then
+            /bin/mv -- "${TARGET_BACKUP_APP}" "${TARGET_APP}" || recovery_failed=1
+        fi
+        if [[ ${LEGACY_BACKED_UP} -eq 1 && -e "${LEGACY_BACKUP_APP}" ]]; then
+            /bin/mv -- "${LEGACY_BACKUP_APP}" "${LEGACY_APP}" || recovery_failed=1
+        fi
     fi
-    /bin/rm -rf -- "${TMP_ROOT}"
+    if [[ ${recovery_failed} -ne 0 ]]; then
+        echo "自动恢复失败；原应用备份保留在：${TMP_ROOT}" >&2
+    else
+        /bin/rm -rf -- "${TMP_ROOT}"
+    fi
     exit "${status}"
 }
 trap cleanup EXIT
@@ -83,14 +102,25 @@ echo "[2/4] 组装并签名应用"
 
 echo "[3/4] 安装到 ${TARGET_APP}"
 /bin/mkdir -p "${INSTALL_DIR}"
+bundle_id_for_app() {
+    /usr/bin/plutil -extract CFBundleIdentifier raw -o - \
+        "$1/Contents/Info.plist" 2>/dev/null || true
+}
+
 if [[ -e "${TARGET_APP}" ]]; then
-    EXISTING_BUNDLE_ID="$(
-        /usr/bin/plutil -extract CFBundleIdentifier raw -o - \
-            "${TARGET_APP}/Contents/Info.plist" 2>/dev/null || true
-    )"
+    EXISTING_BUNDLE_ID="$(bundle_id_for_app "${TARGET_APP}")"
     if [[ "${EXISTING_BUNDLE_ID}" != "${BUNDLE_ID}" ]]; then
         echo "拒绝覆盖 Bundle ID 不匹配的同名应用：${EXISTING_BUNDLE_ID:-未知}" >&2
         exit 1
+    fi
+fi
+MIGRATE_LEGACY_APP=0
+if [[ -e "${LEGACY_APP}" ]]; then
+    LEGACY_BUNDLE_ID="$(bundle_id_for_app "${LEGACY_APP}")"
+    if [[ "${LEGACY_BUNDLE_ID}" == "${BUNDLE_ID}" ]]; then
+        MIGRATE_LEGACY_APP=1
+    else
+        echo "保留 Bundle ID 不匹配的旧应用：${LEGACY_BUNDLE_ID:-未知}" >&2
     fi
 fi
 main_running() {
@@ -111,18 +141,29 @@ for _ in {1..20}; do
     /bin/sleep 0.1
 done
 if main_running || helper_running; then
-    echo "Thanos Light 或恢复助手未能正常退出；为避免留下黑色 Gamma 状态，已中止重装" >&2
+    echo "ScreenDark 或恢复助手未能正常退出；为避免留下黑色 Gamma 状态，已中止重装" >&2
     exit 1
 fi
 if [[ -e "${TARGET_APP}" ]]; then
-    /bin/mv -- "${TARGET_APP}" "${BACKUP_APP}"
+    /bin/mv -- "${TARGET_APP}" "${TARGET_BACKUP_APP}"
+    TARGET_BACKED_UP=1
 fi
+if [[ ${MIGRATE_LEGACY_APP} -eq 1 ]]; then
+    /bin/mv -- "${LEGACY_APP}" "${LEGACY_BACKUP_APP}"
+    LEGACY_BACKED_UP=1
+fi
+TARGET_REPLACEMENT_STARTED=1
 /usr/bin/ditto "${STAGED_APP}" "${TARGET_APP}"
 test -x "${TARGET_APP}/Contents/MacOS/ThanosLight"
 test -x \
     "${TARGET_APP}/Contents/Helpers/ThanosLightRecovery.app/Contents/MacOS/ThanosLightRecovery"
 test -d \
     "${TARGET_APP}/Contents/Resources/${RESOURCE_BUNDLE_NAME}"
+test "$(bundle_id_for_app "${TARGET_APP}")" = "${BUNDLE_ID}"
+if [[ ${MIGRATE_LEGACY_APP} -eq 1 && -e "${LEGACY_APP}" ]]; then
+    echo "旧应用迁移后仍然存在：${LEGACY_APP}" >&2
+    exit 1
+fi
 
 echo "[4/4] 安装完成"
 if [[ "${NO_LAUNCH}" != "1" ]]; then
