@@ -1,0 +1,4 @@
+interface:
+  display_name: "ScreenDark"
+  short_description: "Safely darken and restore Mac displays"
+  default_prompt: "Use $screendark to darken the external display without locking the current session."

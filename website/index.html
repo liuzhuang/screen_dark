@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mac 黑屏不休眠，让任务继续跑｜ScreenDark</title>
+    <meta
+      name="description"
+      content="ScreenDark 让 Mac 黑屏不休眠，并可分别控制内建屏幕与外接显示器。离开工位时，避免因主动锁屏或空闲系统睡眠中断 Codex、Claude Code 和 Computer Use。"
+    >
+    <meta name="theme-color" content="#08090b">
+    <meta name="color-scheme" content="light dark">
+    <script>
+      try {
+        const savedTheme = localStorage.getItem("screendark-theme");
+        const preferredTheme = matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+        document.documentElement.dataset.theme = ["light", "dark"].includes(savedTheme) ? savedTheme : preferredTheme;
+      } catch {
+        document.documentElement.dataset.theme = matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+      }
+    </script>
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="zh_CN">
+    <meta property="og:site_name" content="ScreenDark">
+    <meta property="og:title" content="Mac 黑屏不休眠，让任务继续跑｜ScreenDark">
+    <meta
+      property="og:description"
+      content="分别控制 Mac 内建屏幕与外接显示器，避免因主动锁屏或空闲系统睡眠中断当前任务。"
+    >
+    <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+
+    <header class="site-header">
+      <div class="container header-inner">
+        <a class="brand" href="#top" aria-label="返回 ScreenDark 首页顶部">
+          <img src="assets/logo.svg" width="28" height="28" alt="">
+          <span>ScreenDark</span>
+        </a>
+        <nav class="site-nav" aria-label="主导航">
+          <a href="#how">使用</a>
+          <a href="#install">安装</a>
+          <a
+            href="screendark/SKILL.md"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="查看 ScreenDark Skill（新标签页）"
+          >Skill</a>
+          <button class="theme-toggle" type="button" aria-label="切换到亮色模式" title="切换到亮色模式">
+            <span class="theme-toggle-symbol" aria-hidden="true"></span>
+          </button>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main" tabindex="-1">
+      <section class="hero" id="top" aria-labelledby="hero-title">
+        <div class="container">
+          <div class="hero-copy">
+            <p class="eyebrow">Mac 多显示器黑屏工具</p>
+            <h1 id="hero-title">Mac 黑屏不休眠，<br>任务继续跑。</h1>
+            <p class="hero-description">
+              锁屏可能中断 Codex、Claude Code 和 Computer Use；调暗内建屏幕，外接显示器却往往还亮着。ScreenDark 不主动锁屏，只暗下选中的内建或外接显示器；完全暗屏时会阻止空闲系统睡眠，帮助当前任务继续运行。
+            </p>
+            <a class="button" href="#install">安装 ScreenDark</a>
+          </div>
+
+          <figure class="product-visual">
+            <div class="display-pair">
+              <img
+                src="assets/display-laptop-bright.png"
+                width="520"
+                height="430"
+                alt="ScreenDark 控制的 Mac 内建屏幕保持亮屏"
+                fetchpriority="high"
+              >
+              <img
+                src="assets/display-monitor-dark.png"
+                width="520"
+                height="430"
+                alt="ScreenDark 控制的 Mac 外接显示器已黑屏"
+              >
+            </div>
+            <figcaption>产品示意：内建屏幕保持亮屏，外接显示器已黑屏；两块屏幕可以分别控制。</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="section how-section" id="how" aria-labelledby="how-title">
+        <div class="container">
+          <div class="section-heading">
+            <p class="section-label">使用方法</p>
+            <h2 id="how-title">一键黑屏，再一键点亮。</h2>
+          </div>
+
+          <ol class="steps">
+            <li>
+              <span aria-hidden="true">1</span>
+              <div>
+                <h3>选择需要黑屏的显示器</h3>
+                <p>点击内建或外接显示器，可分别控制。</p>
+              </div>
+            </li>
+            <li>
+              <span aria-hidden="true">2</span>
+              <div>
+                <h3>按快捷键点亮全部显示器</h3>
+                <p>按下 ⌃⌥⌘B，恢复各屏此前的亮度。</p>
+              </div>
+            </li>
+          </ol>
+
+          <aside class="boundary" aria-label="使用边界">
+            <strong>暗屏不是锁屏。</strong>
+            <p>暗屏期间会阻止空闲系统睡眠，但不会阻止别人操作 Mac，请仅在可信环境中使用。</p>
+          </aside>
+        </div>
+      </section>
+
+      <section class="section install-section" id="install" aria-labelledby="install-title">
+        <div class="container">
+          <div class="section-heading">
+            <p class="section-label">安装</p>
+            <h2 id="install-title">从源码安装。</h2>
+          </div>
+
+          <div class="install-grid">
+            <article class="install-card">
+              <p class="install-kind">ScreenDark for Mac</p>
+              <h3>运行安装脚本</h3>
+              <p>获取源码后，在项目根目录运行：</p>
+              <pre><code>bash reinstall.sh</code></pre>
+              <p class="install-note">需要 macOS 13+ 和 Xcode Command Line Tools。脚本会构建 Release、安装到 <code>~/Applications</code> 并自动启动。</p>
+            </article>
+
+            <article class="install-card" id="skill">
+              <p class="install-kind">Codex Skill</p>
+              <h3>让 Codex 识别暗屏操作</h3>
+              <p>Skill 包含单屏暗屏、全部恢复和安全边界。</p>
+              <a class="skill-link" href="screendark/SKILL.md" target="_blank" rel="noopener noreferrer">
+                查看 ScreenDark Skill
+                <span aria-hidden="true">↗</span>
+              </a>
+              <p class="install-note">将文件保存为 <code>~/.codex/skills/screendark/SKILL.md</code>，新建任务后即可使用。</p>
+            </article>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <p>ScreenDark</p>
+        <p>macOS 13+ · 显示器需支持 Gamma 调节</p>
+      </div>
+    </footer>
+
+    <script>
+      const root = document.documentElement;
+      const themeToggle = document.querySelector(".theme-toggle");
+      const themeColor = document.querySelector('meta[name="theme-color"]');
+
+      function syncThemeControl() {
+        const isDark = root.dataset.theme === "dark";
+        const label = isDark ? "切换到亮色模式" : "切换到暗色模式";
+        themeToggle.setAttribute("aria-label", label);
+        themeToggle.title = label;
+        themeColor.content = isDark ? "#08090b" : "#f7f7f8";
+      }
+
+      themeToggle.addEventListener("click", () => {
+        root.dataset.theme = root.dataset.theme === "dark" ? "light" : "dark";
+        try {
+          localStorage.setItem("screendark-theme", root.dataset.theme);
+        } catch {}
+        syncThemeControl();
+      });
+
+      syncThemeControl();
+    </script>
+  </body>
+</html>
