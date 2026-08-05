@@ -306,7 +306,7 @@ private struct DisplayMenu: View {
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, minHeight: 180)
             } else {
-                Text("点击屏幕切换明暗")
+                Text("拖动屏幕分隔线调整亮度")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity)
@@ -406,68 +406,9 @@ private struct DisplayControlCard: View {
         display.brightness == 0
     }
 
-    private var canToggle: Bool {
-        isDark || store.canBlackout(display.id)
-    }
-
-    private var actionTitle: String {
-        isDark ? "点亮" : "变暗"
-    }
-
-    private var artworkName: String {
-        switch (display.isBuiltIn, isDark) {
-        case (true, true):
-            "display-laptop-dark"
-        case (true, false):
-            "display-laptop-bright"
-        case (false, true):
-            "display-monitor-dark"
-        case (false, false):
-            "display-monitor-bright"
-        }
-    }
-
     var body: some View {
         VStack(spacing: 10) {
-            Button {
-                store.toggle(display.id)
-            } label: {
-                ZStack {
-                    Image(nsImage: DisplayArtwork.image(named: artworkName))
-                        .resizable()
-                        .scaledToFit()
-
-                    Text(actionTitle)
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(isDark ? Color.white : Color.black.opacity(0.82))
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 7)
-                        .background(
-                            isDark ? Color.black.opacity(0.58) : Color.white.opacity(0.94),
-                            in: RoundedRectangle(cornerRadius: 9, style: .continuous)
-                        )
-                        .overlay {
-                            RoundedRectangle(cornerRadius: 9, style: .continuous)
-                                .strokeBorder(
-                                    isDark ? Color.white.opacity(0.4) : Color.gray.opacity(0.22),
-                                    lineWidth: 1
-                                )
-                        }
-                        .offset(y: display.isBuiltIn ? -32 : -20)
-                }
-                .frame(maxWidth: .infinity)
-                .frame(height: 214)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .disabled(!canToggle)
-            .help(
-                canToggle
-                    ? (isDark ? "点击点亮显示器" : "点击让显示器变暗")
-                    : "安全守护未就绪，不能让全部屏幕变暗"
-            )
-            .accessibilityLabel("\(actionTitle)\(display.name)")
-            .accessibilityHint("点击屏幕切换明暗")
+            BrightnessImageSlider(display: display, store: store)
 
             Text(display.name)
                 .font(.headline)
@@ -485,19 +426,6 @@ private struct DisplayControlCard: View {
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(isDark ? Color.secondary : Color.accentColor)
                 .monospacedDigit()
-
-            HStack(spacing: 8) {
-                Image(systemName: isDark ? "sun.min" : "sun.max")
-                    .foregroundStyle(.secondary)
-                Slider(
-                    value: Binding(
-                        get: { display.brightness },
-                        set: { store.setBrightness($0, for: display.id) }
-                    ),
-                    in: 0 ... 1
-                )
-                .tint(isDark ? Color.gray : Color.blue)
-            }
         }
         .frame(maxWidth: .infinity)
     }
@@ -508,6 +436,95 @@ private struct DisplayControlCard: View {
             .padding(.horizontal, 5)
             .padding(.vertical, 2)
             .background(.quaternary, in: Capsule())
+    }
+}
+
+private struct BrightnessImageSlider: View {
+    let display: DisplayState
+    @ObservedObject var store: DisplayStore
+
+    private var brightArtworkName: String {
+        display.isBuiltIn ? "display-laptop-bright" : "display-monitor-bright"
+    }
+
+    private var darkArtworkName: String {
+        display.isBuiltIn ? "display-laptop-dark" : "display-monitor-dark"
+    }
+
+    var body: some View {
+        GeometryReader { geometry in
+            let dividerX = geometry.size.width * display.brightness
+
+            ZStack(alignment: .leading) {
+                artwork(named: darkArtworkName)
+
+                artwork(named: brightArtworkName)
+                    .mask(alignment: .leading) {
+                        Rectangle()
+                            .frame(width: dividerX)
+                    }
+
+                Rectangle()
+                    .fill(Color.white.opacity(0.9))
+                    .frame(width: 2)
+                    .shadow(color: .black.opacity(0.45), radius: 2)
+                    .position(x: dividerX, y: geometry.size.height / 2)
+
+                Image(systemName: "arrow.left.and.right")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(Color.accentColor)
+                    .frame(width: 30, height: 30)
+                    .background(.ultraThinMaterial, in: Circle())
+                    .overlay {
+                        Circle().strokeBorder(Color.white.opacity(0.9), lineWidth: 1)
+                    }
+                    .shadow(color: .black.opacity(0.3), radius: 3, y: 1)
+                    .position(
+                        x: dividerX,
+                        y: geometry.size.height / 2
+                    )
+            }
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { value in
+                        store.setBrightness(
+                            Double(value.location.x / geometry.size.width),
+                            for: display.id
+                        )
+                    }
+            )
+        }
+        .frame(width: 259, height: 214)
+        .focusable()
+        .onMoveCommand { direction in
+            switch direction {
+            case .left, .down:
+                adjustBrightness(by: -0.05)
+            case .right, .up:
+                adjustBrightness(by: 0.05)
+            default:
+                break
+            }
+        }
+        .help("点击或左右拖动，调整\(display.name)亮度")
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(display.name)亮度")
+        .accessibilityValue("\(Int((display.brightness * 100).rounded()))%")
+        .accessibilityHint("点击或左右拖动；聚焦后可用方向键调整")
+        .accessibilityAdjustableAction { direction in
+            adjustBrightness(by: direction == .increment ? 0.05 : -0.05)
+        }
+    }
+
+    private func artwork(named name: String) -> some View {
+        Image(nsImage: DisplayArtwork.image(named: name))
+            .resizable()
+            .scaledToFit()
+    }
+
+    private func adjustBrightness(by amount: Double) {
+        store.setBrightness(display.brightness + amount, for: display.id)
     }
 }
 
@@ -572,7 +589,7 @@ private struct DisplayShortcutButton: View {
         .help(
             isRecording
                 ? "按组合键完成设置；Esc 取消，Delete 清除"
-                : "点击设置\(display.name)的明暗切换快捷键"
+                : "点击设置\(display.name)的全黑/全亮快捷键"
         )
         .accessibilityLabel("\(display.name)快捷键")
         .accessibilityValue(isRecording ? "正在录入" : shortcut?.displayText ?? "未设置")
@@ -615,19 +632,6 @@ struct DisplayState: Identifiable, Equatable {
 
     var brightnessToRestore: Double {
         brightness == 0 ? brightnessBeforeBlackout : brightness
-    }
-}
-
-enum BrightnessRestoration {
-    static func recoveryTargets(
-        for displays: [DisplayState],
-        savedBrightness: [String: Double] = [:]
-    ) -> [CGDirectDisplayID: Double] {
-        Dictionary(
-            uniqueKeysWithValues: displays.map {
-                ($0.id, savedBrightness[$0.persistentID] ?? $0.brightnessToRestore)
-            }
-        )
     }
 }
 
@@ -707,7 +711,7 @@ private final class DisplayStore: ObservableObject {
 
     @discardableResult
     func setBrightness(_ brightness: Double, for displayID: CGDirectDisplayID) -> Bool {
-        let clamped = min(max(brightness, 0), 1)
+        let clamped = BrightnessLevel.normalized(brightness)
         let current = Dictionary(uniqueKeysWithValues: displays.map { ($0.id, $0.brightness) })
         let helperReady = recoveryHelperReady && recoveryHelper.isReady
         guard BlackoutSafety.canApply(
@@ -760,22 +764,11 @@ private final class DisplayStore: ObservableObject {
         }
     }
 
-    func light(_ displayID: CGDirectDisplayID) {
-        guard let target = displays.first(where: { $0.id == displayID })?.brightnessToRestore else {
-            return
-        }
-        setBrightness(target, for: displayID)
-    }
-
     func toggle(_ displayID: CGDirectDisplayID) {
         guard let brightness = displays.first(where: { $0.id == displayID })?.brightness else {
             return
         }
-        if brightness == 0 {
-            light(displayID)
-        } else {
-            setBrightness(0, for: displayID)
-        }
+        setBrightness(BrightnessLevel.shortcutTarget(for: brightness), for: displayID)
     }
 
     @discardableResult
@@ -1063,7 +1056,7 @@ private final class DisplayStore: ObservableObject {
                 self?.statusMessage = nil
             },
             onRestore: { [weak self] in
-                self?.reapplyBrightnessAfterRecoveryHotKey()
+                self?.restoreSystemGammaAll()
             },
             onUnexpectedExit: { [weak self] in
                 self?.handleRecoveryHelperExit()
@@ -1127,24 +1120,10 @@ private final class DisplayStore: ObservableObject {
         guard displays.first(where: { $0.id == displayID })?.brightness == 0 else {
             return
         }
-        light(displayID)
-        if displays.first(where: { $0.id == displayID })?.brightness ?? 0 > 0 {
+        setBrightness(1, for: displayID)
+        if displays.first(where: { $0.id == displayID })?.brightness == 1 {
             statusMessage = "已响应系统亮度调节并点亮屏幕"
         }
-    }
-
-    private func reapplyBrightnessAfterRecoveryHotKey() {
-        let failedDisplayIDs = Set(
-            BrightnessRestoration.recoveryTargets(
-                for: displays,
-                savedBrightness: savedBrightness
-            ).compactMap { displayID, brightness in
-                setBrightness(brightness, for: displayID) ? nil : displayID
-            }
-        )
-        statusMessage = failedDisplayIDs.isEmpty
-            ? nil
-            : "部分屏幕未能恢复此前亮度；可再次点亮全部"
     }
 
     private func updateNativeBrightnessTimer() {

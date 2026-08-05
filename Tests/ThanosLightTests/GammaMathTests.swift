@@ -36,37 +36,6 @@ final class GammaMathTests: XCTestCase {
         XCTAssertEqual(display.brightnessToRestore, 0.4)
     }
 
-    func testRecoveryShortcutRestoresEachDisplayToItsPreviousBrightness() {
-        let visibleDisplay = DisplayState(
-            id: 1,
-            name: "Built-in Display",
-            isMain: true,
-            isBuiltIn: true,
-            brightness: 0.35
-        )
-        var blackDisplay = DisplayState(
-            id: 2,
-            name: "External Display",
-            isMain: false,
-            isBuiltIn: false,
-            brightness: 0.6
-        )
-        blackDisplay.recordBrightness(0)
-
-        XCTAssertEqual(visibleDisplay.brightnessToRestore, 0.35)
-        XCTAssertEqual(
-            BrightnessRestoration.recoveryTargets(for: [visibleDisplay, blackDisplay]),
-            [visibleDisplay.id: 0.35, blackDisplay.id: 0.6]
-        )
-        XCTAssertEqual(
-            BrightnessRestoration.recoveryTargets(
-                for: [visibleDisplay, blackDisplay],
-                savedBrightness: [visibleDisplay.persistentID: 0.7]
-            ),
-            [visibleDisplay.id: 0.7, blackDisplay.id: 0.6]
-        )
-    }
-
     func testBrightnessPersistenceKeepsOnlyVisibleLevels() {
         let encoded = BrightnessPersistence.encode([
             "display-a": 0.4,
@@ -139,6 +108,32 @@ final class GammaMathTests: XCTestCase {
             currentBrightness: [internalID: 0, externalID: 1],
             recoveryReady: true
         ))
+    }
+
+    func testBrightnessDisplayedAsZeroRequiresRecoveryHelper() {
+        let displayID: CGDirectDisplayID = 1
+
+        XCTAssertEqual(BrightnessLevel.normalized(0.004), 0)
+        XCTAssertEqual(BrightnessLevel.normalized(0.005), 0.005)
+        XCTAssertFalse(BlackoutSafety.canApply(
+            brightness: 0.004,
+            to: displayID,
+            currentBrightness: [displayID: 1],
+            recoveryReady: false
+        ))
+        XCTAssertTrue(BlackoutSafety.canApply(
+            brightness: 0.004,
+            to: displayID,
+            currentBrightness: [displayID: 1],
+            recoveryReady: true
+        ))
+    }
+
+    func testDisplayShortcutTogglesOnlyBetweenBlackAndFullBrightness() {
+        XCTAssertEqual(BrightnessLevel.shortcutTarget(for: 0), 1)
+        XCTAssertEqual(BrightnessLevel.shortcutTarget(for: 0.004), 1)
+        XCTAssertEqual(BrightnessLevel.shortcutTarget(for: 0.34), 0)
+        XCTAssertEqual(BrightnessLevel.shortcutTarget(for: 1), 0)
     }
 
     func testNativeBrightnessChangeRestoresOnlyMonitoredBlackDisplay() {

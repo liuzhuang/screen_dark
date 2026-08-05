@@ -77,9 +77,20 @@ enum DisplayDiscovery {
 
 }
 
+enum BrightnessLevel {
+    static func normalized(_ brightness: Double) -> Double {
+        let clamped = min(max(brightness, 0), 1)
+        return clamped < 0.005 ? 0 : clamped
+    }
+
+    static func shortcutTarget(for brightness: Double) -> Double {
+        normalized(brightness) == 0 ? 1 : 0
+    }
+}
+
 enum GammaMath {
     static func scaled(_ table: [CGGammaValue], brightness: Double) -> [CGGammaValue] {
-        let factor = CGGammaValue(min(max(brightness, 0), 1))
+        let factor = CGGammaValue(BrightnessLevel.normalized(brightness))
         return table.map { $0 * factor }
     }
 }
@@ -94,12 +105,14 @@ enum BlackoutSafety {
         guard currentBrightness[targetID] != nil else {
             return false
         }
-        guard brightness == 0 else {
+        let targetBrightness = BrightnessLevel.normalized(brightness)
+        guard targetBrightness == 0 else {
             return true
         }
 
         let hasVisibleDisplay = currentBrightness.contains { displayID, current in
-            displayID == targetID ? brightness > 0 : current > 0
+            let candidate = displayID == targetID ? targetBrightness : current
+            return BrightnessLevel.normalized(candidate) > 0
         }
         return hasVisibleDisplay || recoveryReady
     }
