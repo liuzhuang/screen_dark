@@ -85,8 +85,8 @@ enum BrightnessLevel {
         return clamped < 0.005 ? 0 : clamped
     }
 
-    static func shortcutTarget(for brightness: Double) -> Double {
-        normalized(brightness) == 0 ? 1 : 0
+    static func shortcutTarget(for brightness: Double, isMain: Bool) -> Double {
+        normalized(brightness) == 0 ? (isMain ? 1 : 0.8) : 0
     }
 }
 

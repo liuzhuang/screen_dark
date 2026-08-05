@@ -129,11 +129,12 @@ final class GammaMathTests: XCTestCase {
         ))
     }
 
-    func testDisplayShortcutTogglesOnlyBetweenBlackAndFullBrightness() {
-        XCTAssertEqual(BrightnessLevel.shortcutTarget(for: 0), 1)
-        XCTAssertEqual(BrightnessLevel.shortcutTarget(for: 0.004), 1)
-        XCTAssertEqual(BrightnessLevel.shortcutTarget(for: 0.34), 0)
-        XCTAssertEqual(BrightnessLevel.shortcutTarget(for: 1), 0)
+    func testDisplayShortcutUsesDefaultBrightnessWithoutMemory() {
+        XCTAssertEqual(BrightnessLevel.shortcutTarget(for: 0, isMain: true), 1)
+        XCTAssertEqual(BrightnessLevel.shortcutTarget(for: 0, isMain: false), 0.8)
+        XCTAssertEqual(BrightnessLevel.shortcutTarget(for: 0.004, isMain: false), 0.8)
+        XCTAssertEqual(BrightnessLevel.shortcutTarget(for: 0.34, isMain: true), 0)
+        XCTAssertEqual(BrightnessLevel.shortcutTarget(for: 0.8, isMain: false), 0)
     }
 
     func testNativeBrightnessChangeRestoresOnlyMonitoredBlackDisplay() {

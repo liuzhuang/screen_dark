@@ -685,7 +685,7 @@ private struct DisplayShortcutButton: View {
         .help(
             isRecording
                 ? "按组合键完成设置；Esc 取消，Delete 清除"
-                : "点击设置\(display.name)的全黑/全亮快捷键"
+                : "点击设置\(display.name)的变黑/点亮快捷键"
         )
         .accessibilityLabel("\(display.name)快捷键")
         .accessibilityValue(isRecording ? "正在录入" : shortcut?.displayText ?? "未设置")
@@ -864,10 +864,13 @@ private final class DisplayStore: ObservableObject {
     }
 
     func toggle(_ displayID: CGDirectDisplayID) {
-        guard let brightness = displays.first(where: { $0.id == displayID })?.brightness else {
+        guard let display = displays.first(where: { $0.id == displayID }) else {
             return
         }
-        setBrightness(BrightnessLevel.shortcutTarget(for: brightness), for: displayID)
+        setBrightness(
+            BrightnessLevel.shortcutTarget(for: display.brightness, isMain: display.isMain),
+            for: displayID
+        )
     }
 
     @discardableResult
