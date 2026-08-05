@@ -89,6 +89,9 @@ echo "[2/4] 组装并签名应用"
 /usr/bin/ditto \
     "${RESOURCE_BUNDLE}" \
     "${STAGED_APP}/Contents/Resources/${RESOURCE_BUNDLE_NAME}"
+/usr/bin/install -m 644 \
+    "${RESOURCE_BUNDLE}/AppIcon.icns" \
+    "${STAGED_APP}/Contents/Resources/AppIcon.icns"
 /usr/bin/plutil -lint "${STAGED_APP}/Contents/Info.plist" >/dev/null
 /usr/bin/plutil -lint "${HELPER_APP}/Contents/Info.plist" >/dev/null
 /usr/bin/codesign \

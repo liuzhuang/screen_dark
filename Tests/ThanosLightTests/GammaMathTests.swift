@@ -4,6 +4,23 @@ import XCTest
 @testable import ThanosLight
 
 final class GammaMathTests: XCTestCase {
+    func testLaunchAtLoginUsesTheRequestedSystemAction() throws {
+        var actions: [String] = []
+
+        try LaunchAtLogin.setEnabled(
+            true,
+            register: { actions.append("register") },
+            unregister: { actions.append("unregister") }
+        )
+        try LaunchAtLogin.setEnabled(
+            false,
+            register: { actions.append("register") },
+            unregister: { actions.append("unregister") }
+        )
+
+        XCTAssertEqual(actions, ["register", "unregister"])
+    }
+
     func testBlackoutRestoresTheLastVisibleBrightness() {
         var display = DisplayState(
             id: 1,
@@ -41,6 +58,28 @@ final class GammaMathTests: XCTestCase {
             BrightnessRestoration.recoveryTargets(for: [visibleDisplay, blackDisplay]),
             [visibleDisplay.id: 0.35, blackDisplay.id: 0.6]
         )
+        XCTAssertEqual(
+            BrightnessRestoration.recoveryTargets(
+                for: [visibleDisplay, blackDisplay],
+                savedBrightness: [visibleDisplay.persistentID: 0.7]
+            ),
+            [visibleDisplay.id: 0.7, blackDisplay.id: 0.6]
+        )
+    }
+
+    func testBrightnessPersistenceKeepsOnlyVisibleLevels() {
+        let encoded = BrightnessPersistence.encode([
+            "display-a": 0.4,
+            "display-b": 1,
+            "black": 0,
+            "too-bright": 1.1
+        ])
+
+        XCTAssertEqual(
+            BrightnessPersistence.decode(encoded),
+            ["display-a": 0.4, "display-b": 1]
+        )
+        XCTAssertEqual(BrightnessPersistence.decode(Data("invalid".utf8)), [:])
     }
 
     func testDisplayArtworkResourcesAreBundled() {
@@ -58,6 +97,14 @@ final class GammaMathTests: XCTestCase {
             )
             XCTAssertTrue(DisplayArtwork.image(named: name).isValid)
         }
+    }
+
+    func testMenuBarArtworkIsBundledAsATemplateImage() {
+        XCTAssertNotNil(
+            DisplayArtwork.bundle.url(forResource: "menu-bar-icon", withExtension: "pdf")
+        )
+        XCTAssertTrue(MenuBarArtwork.image.isValid)
+        XCTAssertTrue(MenuBarArtwork.image.isTemplate)
     }
 
     func testScalingAlwaysUsesTheBaselineTable() {

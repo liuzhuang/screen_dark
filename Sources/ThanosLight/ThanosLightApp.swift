@@ -1,6 +1,7 @@
 import AppKit
 import Carbon.HIToolbox
 import CoreGraphics
+import ServiceManagement
 import SwiftUI
 
 @main
@@ -8,9 +9,13 @@ struct ThanosLightApp: App {
     @StateObject private var displayStore = DisplayStore()
 
     var body: some Scene {
-        MenuBarExtra("ScreenDark", systemImage: "sun.min.fill") {
+        MenuBarExtra(content: {
             DisplayMenu(store: displayStore)
-        }
+        }, label: {
+            Image(nsImage: MenuBarArtwork.image)
+                .renderingMode(.template)
+                .accessibilityLabel("ScreenDark")
+        })
         .menuBarExtraStyle(.window)
     }
 }
@@ -43,6 +48,20 @@ enum DisplayArtwork {
     static func image(named name: String) -> NSImage {
         images[name] ?? NSImage()
     }
+}
+
+enum MenuBarArtwork {
+    static let image: NSImage = {
+        guard
+            let url = DisplayArtwork.bundle.url(forResource: "menu-bar-icon", withExtension: "pdf"),
+            let image = NSImage(contentsOf: url)
+        else {
+            return NSImage(systemSymbolName: "display", accessibilityDescription: "ScreenDark") ?? NSImage()
+        }
+        image.isTemplate = true
+        image.size = NSSize(width: 18, height: 18)
+        return image
+    }()
 }
 
 struct DisplayShortcut: Codable, Hashable {
@@ -239,6 +258,20 @@ enum DisplayShortcutPersistence {
     }
 }
 
+enum LaunchAtLogin {
+    static var isEnabled: Bool {
+        SMAppService.mainApp.status == .enabled
+    }
+
+    static func setEnabled(
+        _ enabled: Bool,
+        register: () throws -> Void = { try SMAppService.mainApp.register() },
+        unregister: () throws -> Void = { try SMAppService.mainApp.unregister() }
+    ) throws {
+        try (enabled ? register : unregister)()
+    }
+}
+
 private struct DisplayMenu: View {
     @ObservedObject var store: DisplayStore
 
@@ -316,9 +349,29 @@ private struct DisplayMenu: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
 
+            if let launchAtLoginMessage = store.launchAtLoginMessage {
+                Label(launchAtLoginMessage, systemImage: "exclamationmark.triangle.fill")
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
             Divider()
 
-            HStack {
+            HStack(spacing: 18) {
+                Toggle(
+                    "开启自动启动",
+                    isOn: Binding(
+                        get: { store.launchesAtLogin },
+                        set: { store.setLaunchAtLogin($0) }
+                    )
+                )
+                .toggleStyle(.checkbox)
+                .controlSize(.small)
+                .help("登录 macOS 后自动启动 ScreenDark")
+
+                Spacer()
+
                 HStack(spacing: 4) {
                     Text("快捷点亮全部：")
                     Text("⌃⌥⌘B")
@@ -326,7 +379,6 @@ private struct DisplayMenu: View {
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)
-                Spacer()
                 Button("退出") {
                     store.restoreSystemGammaAll()
                     NSApplication.shared.terminate(nil)
@@ -337,6 +389,9 @@ private struct DisplayMenu: View {
         .padding(18)
         .frame(width: 600)
         .background(Color(nsColor: .windowBackgroundColor))
+        .onAppear {
+            store.refreshLaunchAtLoginStatus()
+        }
         .onDisappear {
             store.cancelShortcutRecording()
         }
@@ -564,22 +619,46 @@ struct DisplayState: Identifiable, Equatable {
 }
 
 enum BrightnessRestoration {
-    static func recoveryTargets(for displays: [DisplayState]) -> [CGDirectDisplayID: Double] {
+    static func recoveryTargets(
+        for displays: [DisplayState],
+        savedBrightness: [String: Double] = [:]
+    ) -> [CGDirectDisplayID: Double] {
         Dictionary(
-            uniqueKeysWithValues: displays.map { ($0.id, $0.brightnessToRestore) }
+            uniqueKeysWithValues: displays.map {
+                ($0.id, savedBrightness[$0.persistentID] ?? $0.brightnessToRestore)
+            }
         )
+    }
+}
+
+enum BrightnessPersistence {
+    static func encode(_ brightnessByDisplay: [String: Double]) -> Data? {
+        try? JSONEncoder().encode(brightnessByDisplay)
+    }
+
+    static func decode(_ data: Data?) -> [String: Double] {
+        guard
+            let data,
+            let decoded = try? JSONDecoder().decode([String: Double].self, from: data)
+        else {
+            return [:]
+        }
+        return decoded.filter { $0.value.isFinite && $0.value > 0 && $0.value <= 1 }
     }
 }
 
 private final class DisplayStore: ObservableObject {
     private static let gammaRecoveryKey = "gammaTablesNeedRecovery"
     private static let shortcutAssignmentsKey = "displayShortcuts"
+    private static let savedBrightnessKey = "displayBrightness"
 
     @Published private(set) var displays: [DisplayState] = []
     @Published private(set) var recoveryHelperReady = false
     @Published private(set) var displayShortcuts: [String: DisplayShortcut]
     @Published private(set) var recordingShortcutFor: String?
     @Published private(set) var shortcutStatusMessage: String?
+    @Published private(set) var launchesAtLogin = LaunchAtLogin.isEnabled
+    @Published private(set) var launchAtLoginMessage: String?
     @Published var statusMessage: String?
 
     private let gammaController = GammaController()
@@ -596,10 +675,14 @@ private final class DisplayStore: ObservableObject {
     private var idleSleepActivity: NSObjectProtocol?
     private var nativeBrightnessTimer: Timer?
     private var shortcutEventMonitor: Any?
+    private var savedBrightness: [String: Double]
 
     init() {
         displayShortcuts = DisplayShortcutPersistence.decode(
             UserDefaults.standard.data(forKey: Self.shortcutAssignmentsKey)
+        )
+        savedBrightness = BrightnessPersistence.decode(
+            UserDefaults.standard.data(forKey: Self.savedBrightnessKey)
         )
         recoverGammaAfterUncleanExitIfNeeded()
         reloadDisplayList()
@@ -650,6 +733,13 @@ private final class DisplayStore: ObservableObject {
                 try gammaController.setBrightness(clamped, for: displayID)
             }
             update(displayID) { $0.recordBrightness(clamped) }
+            if let display = displays.first(where: { $0.id == displayID }) {
+                savedBrightness[display.persistentID] = display.brightnessToRestore
+                UserDefaults.standard.set(
+                    BrightnessPersistence.encode(savedBrightness),
+                    forKey: Self.savedBrightnessKey
+                )
+            }
             if clamped > 0 {
                 nativeBrightnessMonitor.stopMonitoring(displayID)
             }
@@ -807,6 +897,26 @@ private final class DisplayStore: ObservableObject {
         reloadDisplayList()
     }
 
+    func setLaunchAtLogin(_ enabled: Bool) {
+        do {
+            try LaunchAtLogin.setEnabled(enabled)
+            refreshLaunchAtLoginStatus()
+            launchAtLoginMessage = enabled && !launchesAtLogin
+                ? "请在系统设置的登录项中允许 ScreenDark 自动启动"
+                : nil
+        } catch {
+            refreshLaunchAtLoginStatus()
+            launchAtLoginMessage = "自动启动设置失败：\(error.localizedDescription)"
+        }
+    }
+
+    func refreshLaunchAtLoginStatus() {
+        launchesAtLogin = LaunchAtLogin.isEnabled
+        if launchesAtLogin {
+            launchAtLoginMessage = nil
+        }
+    }
+
     private func reloadDisplayList() {
         displays = DisplayDiscovery.activeDisplays().map {
             DisplayState(
@@ -817,6 +927,12 @@ private final class DisplayStore: ObservableObject {
                 isBuiltIn: $0.isBuiltIn,
                 brightness: 1
             )
+        }
+        let savedTargets = displays.compactMap { display in
+            savedBrightness[display.persistentID].map { (display.id, $0) }
+        }
+        for (displayID, brightness) in savedTargets {
+            setBrightness(brightness, for: displayID)
         }
         reconcileShortcutRegistrations()
     }
@@ -1011,15 +1127,18 @@ private final class DisplayStore: ObservableObject {
         guard displays.first(where: { $0.id == displayID })?.brightness == 0 else {
             return
         }
-        setBrightness(1, for: displayID)
-        if displays.first(where: { $0.id == displayID })?.brightness == 1 {
+        light(displayID)
+        if displays.first(where: { $0.id == displayID })?.brightness ?? 0 > 0 {
             statusMessage = "已响应系统亮度调节并点亮屏幕"
         }
     }
 
     private func reapplyBrightnessAfterRecoveryHotKey() {
         let failedDisplayIDs = Set(
-            BrightnessRestoration.recoveryTargets(for: displays).compactMap { displayID, brightness in
+            BrightnessRestoration.recoveryTargets(
+                for: displays,
+                savedBrightness: savedBrightness
+            ).compactMap { displayID, brightness in
                 setBrightness(brightness, for: displayID) ? nil : displayID
             }
         )
