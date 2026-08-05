@@ -288,4 +288,56 @@ final class GammaMathTests: XCTestCase {
             )
         )
     }
+
+    func testDisplayArrangementUsesNativeScreenCoordinates() {
+        let upperLeft = DisplayState(
+            id: 1,
+            name: "Built-in Display",
+            isMain: true,
+            isBuiltIn: true,
+            brightness: 1,
+            frame: CGRect(x: 0, y: 20, width: 100, height: 80)
+        )
+        let lowerRight = DisplayState(
+            id: 2,
+            name: "External Display",
+            isMain: false,
+            isBuiltIn: false,
+            brightness: 1,
+            frame: CGRect(x: 100, y: 0, width: 100, height: 80)
+        )
+        let displays = [lowerRight, upperLeft]
+
+        XCTAssertEqual(DisplayArrangement.axis(for: displays), .horizontal)
+        XCTAssertEqual(
+            DisplayArrangement.ordered(displays, along: .horizontal).map(\.id),
+            [upperLeft.id, lowerRight.id]
+        )
+        XCTAssertEqual(
+            DisplayArrangement.crossAxisInset(
+                for: lowerRight,
+                among: displays,
+                along: .horizontal,
+                cardWidth: 100
+            ),
+            20
+        )
+
+        let verticalDisplays = [
+            lowerRight,
+            DisplayState(
+                id: 3,
+                name: "Upper Display",
+                isMain: false,
+                isBuiltIn: false,
+                brightness: 1,
+                frame: CGRect(x: 120, y: 100, width: 100, height: 80)
+            )
+        ]
+        XCTAssertEqual(DisplayArrangement.axis(for: verticalDisplays), .vertical)
+        XCTAssertEqual(
+            DisplayArrangement.ordered(verticalDisplays, along: .vertical).map(\.id),
+            [3, lowerRight.id]
+        )
+    }
 }

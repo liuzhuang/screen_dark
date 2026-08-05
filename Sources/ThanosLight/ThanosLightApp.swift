@@ -272,6 +272,61 @@ enum LaunchAtLogin {
     }
 }
 
+enum DisplayArrangement {
+    enum Axis {
+        case horizontal
+        case vertical
+    }
+
+    static func axis(for displays: [DisplayState]) -> Axis {
+        let centers = displays.map(\.frame).map { CGPoint(x: $0.midX, y: $0.midY) }
+        guard
+            let minX = centers.map(\.x).min(),
+            let maxX = centers.map(\.x).max(),
+            let minY = centers.map(\.y).min(),
+            let maxY = centers.map(\.y).max()
+        else {
+            return .horizontal
+        }
+        return maxX - minX >= maxY - minY ? .horizontal : .vertical
+    }
+
+    static func ordered(_ displays: [DisplayState], along axis: Axis) -> [DisplayState] {
+        displays.sorted {
+            switch axis {
+            case .horizontal:
+                return ($0.frame.minX, -$0.frame.maxY) < ($1.frame.minX, -$1.frame.maxY)
+            case .vertical:
+                return (-$0.frame.maxY, $0.frame.minX) < (-$1.frame.maxY, $1.frame.minX)
+            }
+        }
+    }
+
+    static func crossAxisInset(
+        for display: DisplayState,
+        among displays: [DisplayState],
+        along axis: Axis,
+        cardWidth: CGFloat = 259
+    ) -> CGFloat {
+        let frames = displays.map(\.frame)
+        guard
+            let firstFrame = frames.first,
+            let widestDisplay = frames.map(\.width).max(),
+            widestDisplay > 0
+        else {
+            return 0
+        }
+        let union = frames.dropFirst().reduce(firstFrame) { $0.union($1) }
+        let scale = cardWidth / widestDisplay
+        switch axis {
+        case .horizontal:
+            return max(0, union.maxY - display.frame.maxY) * scale
+        case .vertical:
+            return max(0, display.frame.minX - union.minX) * scale
+        }
+    }
+}
+
 private struct DisplayMenu: View {
     @ObservedObject var store: DisplayStore
 
@@ -283,6 +338,14 @@ private struct DisplayMenu: View {
             GridItem(.flexible(), spacing: 22),
             GridItem(.flexible())
         ]
+    }
+
+    private var arrangementAxis: DisplayArrangement.Axis {
+        DisplayArrangement.axis(for: store.displays)
+    }
+
+    private var arrangedDisplays: [DisplayState] {
+        DisplayArrangement.ordered(store.displays, along: arrangementAxis)
     }
 
     var body: some View {
@@ -311,11 +374,7 @@ private struct DisplayMenu: View {
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity)
 
-                LazyVGrid(columns: displayColumns, alignment: .center, spacing: 22) {
-                    ForEach(store.displays) { display in
-                        DisplayControlCard(display: display, store: store)
-                    }
-                }
+                displayControls
             }
 
             Divider()
@@ -394,6 +453,43 @@ private struct DisplayMenu: View {
         }
         .onDisappear {
             store.cancelShortcutRecording()
+        }
+    }
+
+    @ViewBuilder
+    private var displayControls: some View {
+        if store.displays.count == 2, arrangementAxis == .horizontal {
+            HStack(alignment: .top, spacing: 22) {
+                ForEach(arrangedDisplays) { display in
+                    DisplayControlCard(display: display, store: store)
+                        .frame(width: 259)
+                        .padding(.top, DisplayArrangement.crossAxisInset(
+                            for: display,
+                            among: store.displays,
+                            along: arrangementAxis
+                        ))
+                }
+            }
+            .frame(maxWidth: .infinity)
+        } else if store.displays.count == 2 {
+            VStack(alignment: .leading, spacing: 22) {
+                ForEach(arrangedDisplays) { display in
+                    DisplayControlCard(display: display, store: store)
+                        .frame(width: 259)
+                        .padding(.leading, DisplayArrangement.crossAxisInset(
+                            for: display,
+                            among: store.displays,
+                            along: arrangementAxis
+                        ))
+                }
+            }
+            .frame(maxWidth: .infinity)
+        } else {
+            LazyVGrid(columns: displayColumns, alignment: .center, spacing: 22) {
+                ForEach(store.displays) { display in
+                    DisplayControlCard(display: display, store: store)
+                }
+            }
         }
     }
 }
@@ -603,6 +699,7 @@ struct DisplayState: Identifiable, Equatable {
     let name: String
     let isMain: Bool
     let isBuiltIn: Bool
+    let frame: CGRect
     var brightness: Double
     private(set) var brightnessBeforeBlackout: Double
 
@@ -612,13 +709,15 @@ struct DisplayState: Identifiable, Equatable {
         name: String,
         isMain: Bool,
         isBuiltIn: Bool,
-        brightness: Double
+        brightness: Double,
+        frame: CGRect = .zero
     ) {
         self.id = id
         self.persistentID = persistentID ?? "runtime-\(id)"
         self.name = name
         self.isMain = isMain
         self.isBuiltIn = isBuiltIn
+        self.frame = frame
         self.brightness = brightness
         brightnessBeforeBlackout = brightness > 0 ? brightness : 1
     }
@@ -918,7 +1017,8 @@ private final class DisplayStore: ObservableObject {
                 name: $0.name,
                 isMain: $0.isMain,
                 isBuiltIn: $0.isBuiltIn,
-                brightness: 1
+                brightness: 1,
+                frame: $0.frame
             )
         }
         let savedTargets = displays.compactMap { display in

@@ -8,6 +8,7 @@ struct DisplayDescriptor: Identifiable, Equatable {
     let name: String
     let isMain: Bool
     let isBuiltIn: Bool
+    let frame: CGRect
 }
 
 enum DisplayIdentity {
@@ -64,7 +65,8 @@ enum DisplayDiscovery {
                 ),
                 name: screen.localizedName,
                 isMain: displayID == mainDisplayID,
-                isBuiltIn: isBuiltIn
+                isBuiltIn: isBuiltIn,
+                frame: screen.frame
             )
         }
         .sorted {
