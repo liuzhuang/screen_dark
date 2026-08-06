@@ -68,6 +68,51 @@ final class GammaMathTests: XCTestCase {
         }
     }
 
+    func testBrightnessSliderGeometryClampsMappingsAndKeepsHandleInsideTrack() {
+        let width: CGFloat = 100
+        let handleDiameter: CGFloat = 24
+        let pixelAccuracy: CGFloat = 0.0001
+
+        XCTAssertEqual(
+            BrightnessSliderGeometry.brightness(at: -10, width: width),
+            0,
+            accuracy: 0.000_000_001
+        )
+        XCTAssertEqual(
+            BrightnessSliderGeometry.brightness(at: 50, width: width),
+            0.5,
+            accuracy: 0.000_000_001
+        )
+        XCTAssertEqual(
+            BrightnessSliderGeometry.brightness(at: 110, width: width),
+            1,
+            accuracy: 0.000_000_001
+        )
+        XCTAssertEqual(
+            BrightnessSliderGeometry.dividerX(for: 0.5, width: width),
+            50,
+            accuracy: pixelAccuracy
+        )
+        XCTAssertEqual(
+            BrightnessSliderGeometry.handleX(
+                for: 0,
+                width: width,
+                handleDiameter: handleDiameter
+            ),
+            handleDiameter / 2,
+            accuracy: pixelAccuracy
+        )
+        XCTAssertEqual(
+            BrightnessSliderGeometry.handleX(
+                for: 1,
+                width: width,
+                handleDiameter: handleDiameter
+            ),
+            width - handleDiameter / 2,
+            accuracy: pixelAccuracy
+        )
+    }
+
     func testMenuBarArtworkIsBundledAsATemplateImage() {
         XCTAssertNotNil(
             DisplayArtwork.bundle.url(forResource: "menu-bar-icon", withExtension: "pdf")

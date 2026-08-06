@@ -327,6 +327,38 @@ enum DisplayArrangement {
     }
 }
 
+enum BrightnessSliderGeometry {
+    static func brightness(at x: CGFloat, width: CGFloat) -> Double {
+        guard x.isFinite, width.isFinite, width > 0 else {
+            return 0
+        }
+        return Double(min(max(x / width, 0), 1))
+    }
+
+    static func dividerX(for brightness: Double, width: CGFloat) -> CGFloat {
+        guard brightness.isFinite, width.isFinite, width > 0 else {
+            return 0
+        }
+        return CGFloat(min(max(brightness, 0), 1)) * width
+    }
+
+    static func handleX(
+        for brightness: Double,
+        width: CGFloat,
+        handleDiameter: CGFloat
+    ) -> CGFloat {
+        guard width.isFinite, width > 0 else {
+            return 0
+        }
+        let diameter = handleDiameter.isFinite ? max(handleDiameter, 0) : 0
+        let radius = min(diameter / 2, width / 2)
+        return min(
+            max(dividerX(for: brightness, width: width), radius),
+            width - radius
+        )
+    }
+}
+
 private struct DisplayMenu: View {
     @ObservedObject var store: DisplayStore
 
@@ -335,7 +367,7 @@ private struct DisplayMenu: View {
             return [GridItem(.flexible())]
         }
         return [
-            GridItem(.flexible(), spacing: 22),
+            GridItem(.flexible(), spacing: 14),
             GridItem(.flexible())
         ]
     }
@@ -349,31 +381,33 @@ private struct DisplayMenu: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text("ScreenDark")
-                    .font(.title2.bold())
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("ScreenDark")
+                        .font(.headline)
+                    if !store.displays.isEmpty {
+                        Text("拖动设备屏幕调整亮度")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
                 Spacer()
                 Button {
                     store.reloadDisplays()
                 } label: {
                     Image(systemName: "arrow.clockwise")
-                        .font(.title3)
                 }
                 .buttonStyle(.borderless)
+                .controlSize(.small)
                 .help("重新识别显示器并点亮全部")
             }
 
             if store.displays.isEmpty {
                 Text("没有检测到可控制的显示器")
                     .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, minHeight: 180)
+                    .frame(maxWidth: .infinity, minHeight: 160)
             } else {
-                Text("拖动屏幕分隔线调整亮度")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity)
-
                 displayControls
             }
 
@@ -385,12 +419,12 @@ private struct DisplayMenu: View {
                     .help("调整系统亮度会自动点亮已变暗的显示器")
                 Spacer(minLength: 12)
                 Label(
-                    store.recoveryHelperReady ? "安全守护已就绪" : "安全守护未就绪",
+                    store.recoveryHelperReady ? "安全保护开启" : "安全保护未开启",
                     systemImage: store.recoveryHelperReady
                         ? "checkmark.shield"
                         : "exclamationmark.shield"
                 )
-                .foregroundStyle(store.recoveryHelperReady ? Color.green : Color.orange)
+                .foregroundStyle(store.recoveryHelperReady ? Color.secondary : Color.orange)
             }
             .font(.caption)
 
@@ -419,7 +453,7 @@ private struct DisplayMenu: View {
 
             HStack(spacing: 18) {
                 Toggle(
-                    "开启自动启动",
+                    "登录时启动",
                     isOn: Binding(
                         get: { store.launchesAtLogin },
                         set: { store.setLaunchAtLogin($0) }
@@ -432,22 +466,21 @@ private struct DisplayMenu: View {
                 Spacer()
 
                 HStack(spacing: 4) {
-                    Text("快捷点亮全部：")
+                    Text("点亮全部")
                     Text("⌃⌥⌘B")
                         .monospaced()
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)
-                Button("退出") {
+                Button("退出 ScreenDark") {
                     store.restoreSystemGammaAll()
                     NSApplication.shared.terminate(nil)
                 }
-                .controlSize(.large)
+                .controlSize(.small)
             }
         }
-        .padding(18)
-        .frame(width: 600)
-        .background(Color(nsColor: .windowBackgroundColor))
+        .padding(16)
+        .frame(width: 540)
         .onAppear {
             store.refreshLaunchAtLoginStatus()
         }
@@ -459,33 +492,53 @@ private struct DisplayMenu: View {
     @ViewBuilder
     private var displayControls: some View {
         if store.displays.count == 2, arrangementAxis == .horizontal {
-            HStack(alignment: .top, spacing: 22) {
+            HStack(alignment: .top, spacing: 14) {
                 ForEach(arrangedDisplays) { display in
-                    DisplayControlCard(display: display, store: store)
-                        .frame(width: 259)
-                        .padding(.top, DisplayArrangement.crossAxisInset(
-                            for: display,
-                            among: store.displays,
-                            along: arrangementAxis
-                        ))
+                    DisplayControlCard(
+                        display: display,
+                        store: store,
+                        previewOffset: CGSize(
+                            width: 0,
+                            height: min(
+                                DisplayArrangement.crossAxisInset(
+                                    for: display,
+                                    among: store.displays,
+                                    along: arrangementAxis,
+                                    cardWidth: 220
+                                ),
+                                12
+                            )
+                        )
+                    )
+                    .frame(width: 247)
                 }
             }
             .frame(maxWidth: .infinity)
-        } else if store.displays.count == 2 {
-            VStack(alignment: .leading, spacing: 22) {
+        } else if store.displays.count == 2, arrangementAxis == .vertical {
+            VStack(alignment: .center, spacing: 14) {
                 ForEach(arrangedDisplays) { display in
-                    DisplayControlCard(display: display, store: store)
-                        .frame(width: 259)
-                        .padding(.leading, DisplayArrangement.crossAxisInset(
-                            for: display,
-                            among: store.displays,
-                            along: arrangementAxis
-                        ))
+                    DisplayControlCard(
+                        display: display,
+                        store: store,
+                        previewOffset: CGSize(
+                            width: min(
+                                DisplayArrangement.crossAxisInset(
+                                    for: display,
+                                    among: store.displays,
+                                    along: arrangementAxis,
+                                    cardWidth: 220
+                                ),
+                                12
+                            ),
+                            height: 0
+                        )
+                    )
+                    .frame(width: 247)
                 }
             }
             .frame(maxWidth: .infinity)
         } else {
-            LazyVGrid(columns: displayColumns, alignment: .center, spacing: 22) {
+            LazyVGrid(columns: displayColumns, alignment: .center, spacing: 14) {
                 ForEach(store.displays) { display in
                     DisplayControlCard(display: display, store: store)
                 }
@@ -497,112 +550,137 @@ private struct DisplayMenu: View {
 private struct DisplayControlCard: View {
     let display: DisplayState
     @ObservedObject var store: DisplayStore
-
-    private var isDark: Bool {
-        display.brightness == 0
-    }
+    var previewOffset: CGSize = .zero
 
     var body: some View {
-        VStack(spacing: 10) {
-            BrightnessImageSlider(display: display, store: store)
+        VStack(spacing: 8) {
+            ZStack {
+                BrightnessImageSlider(display: display, store: store)
+                    .offset(previewOffset)
+            }
+            .frame(width: 232, height: 162)
 
-            Text(display.name)
-                .font(.headline)
-                .lineLimit(1)
-
-            HStack(spacing: 6) {
-                if display.isMain {
-                    tag("主显示器")
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(display.isBuiltIn ? "内建显示器" : "外接显示器")
+                        .font(.subheadline.weight(.semibold))
+                    Text(display.name)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
                 }
-                tag(display.isBuiltIn ? "内建" : "外接")
-                DisplayShortcutButton(display: display, store: store)
+                Spacer(minLength: 8)
+                Text("\(Int((display.brightness * 100).rounded()))%")
+                    .font(.title2.weight(.semibold))
+                    .foregroundStyle(.primary)
+                    .monospacedDigit()
             }
 
-            Text("\(Int((display.brightness * 100).rounded()))%")
-                .font(.title3.weight(.semibold))
-                .foregroundStyle(isDark ? Color.secondary : Color.accentColor)
-                .monospacedDigit()
+            HStack(spacing: 8) {
+                if display.isMain {
+                    Label("主显示器", systemImage: "star.fill")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer(minLength: 0)
+                DisplayShortcutButton(display: display, store: store)
+            }
         }
-        .frame(maxWidth: .infinity)
-    }
-
-    private func tag(_ text: String) -> some View {
-        Text(text)
-            .font(.caption2)
-            .padding(.horizontal, 5)
-            .padding(.vertical, 2)
-            .background(.quaternary, in: Capsule())
+        .frame(maxWidth: 247)
     }
 }
 
 private struct BrightnessImageSlider: View {
     let display: DisplayState
     @ObservedObject var store: DisplayStore
-
-    private var brightArtworkName: String {
-        display.isBuiltIn ? "display-laptop-bright" : "display-monitor-bright"
-    }
-
-    private var darkArtworkName: String {
-        display.isBuiltIn ? "display-laptop-dark" : "display-monitor-dark"
-    }
+    @FocusState private var isFocused: Bool
+    @GestureState private var isDragging = false
+    @State private var isHovering = false
 
     var body: some View {
         GeometryReader { geometry in
-            let dividerX = geometry.size.width * display.brightness
+            let screen = screenRect(in: geometry.size)
+            let dividerX = screen.minX + BrightnessSliderGeometry.dividerX(
+                for: display.brightness,
+                width: screen.width
+            )
+            let handleDiameter: CGFloat = 24
+            let handleX = screen.minX + BrightnessSliderGeometry.handleX(
+                for: display.brightness,
+                width: screen.width,
+                handleDiameter: handleDiameter
+            )
+            let isActive = isHovering || isDragging || isFocused
 
-            ZStack(alignment: .leading) {
-                artwork(named: darkArtworkName)
+            ZStack {
+                deviceBase(screen: screen)
 
-                artwork(named: brightArtworkName)
-                    .mask(alignment: .leading) {
-                        Rectangle()
-                            .frame(width: dividerX)
-                    }
+                screenContent(screen: screen)
+
+                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .strokeBorder(Color.white.opacity(0.2), lineWidth: 1)
+                    .frame(width: screen.width, height: screen.height)
+                    .position(x: screen.midX, y: screen.midY)
 
                 Rectangle()
-                    .fill(Color.white.opacity(0.9))
-                    .frame(width: 2)
-                    .shadow(color: .black.opacity(0.45), radius: 2)
-                    .position(x: dividerX, y: geometry.size.height / 2)
+                    .fill(Color.white.opacity(0.88))
+                    .frame(width: 1.5, height: screen.height - 4)
+                    .shadow(color: .black.opacity(0.3), radius: 1)
+                    .position(x: dividerX, y: screen.midY)
 
                 Image(systemName: "arrow.left.and.right")
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(Color.accentColor)
-                    .frame(width: 30, height: 30)
-                    .background(.ultraThinMaterial, in: Circle())
-                    .overlay {
-                        Circle().strokeBorder(Color.white.opacity(0.9), lineWidth: 1)
-                    }
-                    .shadow(color: .black.opacity(0.3), radius: 3, y: 1)
-                    .position(
-                        x: dividerX,
-                        y: geometry.size.height / 2
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundStyle(isActive ? Color.white : Color.primary)
+                    .frame(width: handleDiameter, height: handleDiameter)
+                    .background(
+                        isActive ? Color.accentColor : Color(nsColor: .controlBackgroundColor),
+                        in: Circle()
                     )
+                    .overlay {
+                        Circle().strokeBorder(
+                            isActive ? Color.accentColor : Color.primary.opacity(0.22),
+                            lineWidth: isActive ? 2 : 1
+                        )
+                    }
+                    .shadow(color: .black.opacity(0.22), radius: 2, y: 1)
+                    .position(x: handleX, y: screen.midY)
+
+                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .fill(Color.clear)
+                    .frame(width: screen.width, height: screen.height)
+                    .position(x: screen.midX, y: screen.midY)
+                    .focusable()
+                    .focused($isFocused)
+                    .onMoveCommand { direction in
+                        switch direction {
+                        case .left, .down:
+                            adjustBrightness(by: -0.05)
+                        case .right, .up:
+                            adjustBrightness(by: 0.05)
+                        default:
+                            break
+                        }
+                    }
             }
             .contentShape(Rectangle())
+            .onHover { isHovering = $0 }
             .gesture(
                 DragGesture(minimumDistance: 0)
+                    .updating($isDragging) { _, state, _ in
+                        state = true
+                    }
                     .onChanged { value in
                         store.setBrightness(
-                            Double(value.location.x / geometry.size.width),
+                            BrightnessSliderGeometry.brightness(
+                                at: value.location.x - screen.minX,
+                                width: screen.width
+                            ),
                             for: display.id
                         )
                     }
             )
         }
-        .frame(width: 259, height: 214)
-        .focusable()
-        .onMoveCommand { direction in
-            switch direction {
-            case .left, .down:
-                adjustBrightness(by: -0.05)
-            case .right, .up:
-                adjustBrightness(by: 0.05)
-            default:
-                break
-            }
-        }
+        .frame(width: 220, height: 150)
         .help("点击或左右拖动，调整\(display.name)亮度")
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(display.name)亮度")
@@ -613,10 +691,83 @@ private struct BrightnessImageSlider: View {
         }
     }
 
-    private func artwork(named name: String) -> some View {
-        Image(nsImage: DisplayArtwork.image(named: name))
-            .resizable()
-            .scaledToFit()
+    private func screenRect(in size: CGSize) -> CGRect {
+        CGRect(x: 25, y: 14, width: max(0, size.width - 50), height: 100)
+    }
+
+    @ViewBuilder
+    private func deviceBase(screen: CGRect) -> some View {
+        if display.isBuiltIn {
+            RoundedRectangle(cornerRadius: 5, style: .continuous)
+                .fill(Color(nsColor: .controlBackgroundColor))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 5, style: .continuous)
+                        .strokeBorder(Color.primary.opacity(0.2), lineWidth: 1)
+                }
+                .frame(width: screen.width + 34, height: 14)
+                .position(x: screen.midX, y: screen.maxY + 10)
+
+            Capsule()
+                .fill(Color.primary.opacity(0.22))
+                .frame(width: 38, height: 2)
+                .position(x: screen.midX, y: screen.maxY + 7)
+        } else {
+            RoundedRectangle(cornerRadius: 2, style: .continuous)
+                .fill(Color(nsColor: .controlBackgroundColor))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 2, style: .continuous)
+                        .strokeBorder(Color.primary.opacity(0.18), lineWidth: 1)
+                }
+                .frame(width: 14, height: 24)
+                .position(x: screen.midX, y: screen.maxY + 15)
+
+            Capsule()
+                .fill(Color(nsColor: .controlBackgroundColor))
+                .overlay {
+                    Capsule().strokeBorder(Color.primary.opacity(0.2), lineWidth: 1)
+                }
+                .frame(width: 64, height: 7)
+                .position(x: screen.midX, y: screen.maxY + 29)
+        }
+
+        RoundedRectangle(cornerRadius: 9, style: .continuous)
+            .fill(Color.black.opacity(0.86))
+            .frame(width: screen.width + 10, height: screen.height + 10)
+            .position(x: screen.midX, y: screen.midY)
+
+        Circle()
+            .fill(Color.white.opacity(0.28))
+            .frame(width: 3, height: 3)
+            .position(x: screen.midX, y: screen.minY - 2.5)
+    }
+
+    private func screenContent(screen: CGRect) -> some View {
+        let brightWidth = BrightnessSliderGeometry.dividerX(
+            for: display.brightness,
+            width: screen.width
+        )
+
+        return ZStack(alignment: .leading) {
+            LinearGradient(
+                colors: [Color.black.opacity(0.98), Color.black.opacity(0.78)],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+
+            LinearGradient(
+                colors: [
+                    Color(red: 0.10, green: 0.42, blue: 0.96),
+                    Color(red: 0.20, green: 0.78, blue: 0.88),
+                    Color(red: 0.48, green: 0.88, blue: 0.74)
+                ],
+                startPoint: .bottomLeading,
+                endPoint: .topTrailing
+            )
+            .frame(width: brightWidth, height: screen.height)
+        }
+        .frame(width: screen.width, height: screen.height, alignment: .leading)
+        .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+        .position(x: screen.midX, y: screen.midY)
     }
 
     private func adjustBrightness(by amount: Double) {
