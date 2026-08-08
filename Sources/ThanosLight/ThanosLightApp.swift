@@ -12,7 +12,7 @@ struct ThanosLightApp: App {
         MenuBarExtra(content: {
             DisplayMenu(store: displayStore)
         }, label: {
-            Image(systemName: "circle.lefthalf.filled")
+            Image(systemName: "display")
                 .font(.system(size: 20, weight: .medium))
                 .accessibilityLabel("ScreenDark")
         })
