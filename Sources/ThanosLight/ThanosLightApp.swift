@@ -12,8 +12,8 @@ struct ThanosLightApp: App {
         MenuBarExtra(content: {
             DisplayMenu(store: displayStore)
         }, label: {
-            Image(nsImage: MenuBarArtwork.image)
-                .renderingMode(.template)
+            Image(systemName: "circle.lefthalf.filled")
+                .font(.system(size: 20, weight: .medium))
                 .accessibilityLabel("ScreenDark")
         })
         .menuBarExtraStyle(.window)
@@ -48,20 +48,6 @@ enum DisplayArtwork {
     static func image(named name: String) -> NSImage {
         images[name] ?? NSImage()
     }
-}
-
-enum MenuBarArtwork {
-    static let image: NSImage = {
-        guard
-            let url = DisplayArtwork.bundle.url(forResource: "menu-bar-icon", withExtension: "pdf"),
-            let image = NSImage(contentsOf: url)
-        else {
-            return NSImage(systemSymbolName: "display", accessibilityDescription: "ScreenDark") ?? NSImage()
-        }
-        image.isTemplate = true
-        image.size = NSSize(width: 18, height: 18)
-        return image
-    }()
 }
 
 struct DisplayShortcut: Codable, Hashable {

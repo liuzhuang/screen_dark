@@ -113,14 +113,6 @@ final class GammaMathTests: XCTestCase {
         )
     }
 
-    func testMenuBarArtworkIsBundledAsATemplateImage() {
-        XCTAssertNotNil(
-            DisplayArtwork.bundle.url(forResource: "menu-bar-icon", withExtension: "pdf")
-        )
-        XCTAssertTrue(MenuBarArtwork.image.isValid)
-        XCTAssertTrue(MenuBarArtwork.image.isTemplate)
-    }
-
     func testScalingAlwaysUsesTheBaselineTable() {
         let baseline: [CGGammaValue] = [0, 0.25, 0.5, 1]
 
