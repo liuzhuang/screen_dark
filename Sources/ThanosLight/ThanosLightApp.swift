@@ -400,9 +400,9 @@ private struct DisplayMenu: View {
             Divider()
 
             HStack(spacing: 24) {
-                Label("Fn+F1/F2 由 macOS 调节", systemImage: "keyboard")
+                Label("黑屏恢复请使用快捷键", systemImage: "keyboard")
                     .foregroundStyle(.secondary)
-                    .help("调整系统亮度会自动点亮已变暗的显示器")
+                    .help("使用单屏快捷键或 ⌃⌥⌘B 点亮显示器")
                 Spacer(minLength: 12)
                 Label(
                     store.recoveryHelperReady ? "安全保护开启" : "安全保护未开启",
@@ -904,16 +904,9 @@ private final class DisplayStore: ObservableObject {
     private let gammaController = GammaController()
     private let recoveryHelper = RecoveryHelperProcess()
     private let shortcutRegistry = GlobalHotKeyRegistry()
-    private lazy var nativeBrightnessMonitor = NativeBrightnessMonitor(
-        readBrightness: { SystemDisplayBrightness.value(for: $0) },
-        restoreBlackDisplay: { [weak self] displayID in
-            self?.restoreAfterNativeBrightnessChange(displayID)
-        }
-    )
     private var observers: [NSObjectProtocol] = []
     private var workspaceObserver: NSObjectProtocol?
     private var idleSleepActivity: NSObjectProtocol?
-    private var nativeBrightnessTimer: Timer?
     private var shortcutEventMonitor: Any?
     private var savedBrightness: [String: Double]
 
@@ -934,7 +927,6 @@ private final class DisplayStore: ObservableObject {
         if let shortcutEventMonitor {
             NSEvent.removeMonitor(shortcutEventMonitor)
         }
-        nativeBrightnessTimer?.invalidate()
         observers.forEach(NotificationCenter.default.removeObserver)
         if let workspaceObserver {
             NSWorkspace.shared.notificationCenter.removeObserver(workspaceObserver)
@@ -960,9 +952,6 @@ private final class DisplayStore: ObservableObject {
             return false
         }
         let currentBrightness = displays.first(where: { $0.id == displayID })?.brightness ?? 1
-        let wasBlack = currentBrightness == 0
-        let monitorsNativeBrightness = clamped == 0
-            && nativeBrightnessMonitor.beginMonitoring(displayID)
         if clamped < 1 || currentBrightness < 1 {
             markGammaForRecovery()
         }
@@ -980,21 +969,11 @@ private final class DisplayStore: ObservableObject {
                     forKey: Self.savedBrightnessKey
                 )
             }
-            if clamped > 0 {
-                nativeBrightnessMonitor.stopMonitoring(displayID)
-            }
-            updateNativeBrightnessTimer()
             updateIdleSleepActivity()
-            statusMessage = clamped == 0 && !monitorsNativeBrightness
-                ? "该显示器不支持系统亮度检测；请使用 ⌃⌥⌘B 点亮全部"
-                : nil
+            statusMessage = nil
             clearGammaRecoveryMarkerIfFullyRestored()
             return true
         } catch {
-            if !wasBlack {
-                nativeBrightnessMonitor.stopMonitoring(displayID)
-            }
-            updateNativeBrightnessTimer()
             statusMessage = error.localizedDescription
             return false
         }
@@ -1014,10 +993,8 @@ private final class DisplayStore: ObservableObject {
     func restoreSystemGammaAll() -> Bool {
         let failedDisplayIDs = gammaController.restoreAll()
         for index in displays.indices where !failedDisplayIDs.contains(displays[index].id) {
-            nativeBrightnessMonitor.stopMonitoring(displays[index].id)
             displays[index].recordBrightness(1)
         }
-        updateNativeBrightnessTimer()
         updateIdleSleepActivity()
         if failedDisplayIDs.isEmpty {
             clearGammaRecoveryMarker()
@@ -1354,40 +1331,6 @@ private final class DisplayStore: ObservableObject {
             ProcessInfo.processInfo.endActivity(idleSleepActivity)
             self.idleSleepActivity = nil
         }
-    }
-
-    private func restoreAfterNativeBrightnessChange(_ displayID: CGDirectDisplayID) {
-        guard displays.first(where: { $0.id == displayID })?.brightness == 0 else {
-            return
-        }
-        setBrightness(1, for: displayID)
-        if displays.first(where: { $0.id == displayID })?.brightness == 1 {
-            statusMessage = "已响应系统亮度调节并点亮屏幕"
-        }
-    }
-
-    private func updateNativeBrightnessTimer() {
-        guard nativeBrightnessMonitor.hasMonitoredDisplays else {
-            nativeBrightnessTimer?.invalidate()
-            nativeBrightnessTimer = nil
-            return
-        }
-        guard nativeBrightnessTimer == nil else {
-            return
-        }
-
-        let timer = Timer(timeInterval: 0.1, repeats: true) { [weak self] _ in
-            guard let self else {
-                return
-            }
-            let blackDisplayIDs = Set(
-                displays.lazy.filter { $0.brightness == 0 }.map(\.id)
-            )
-            nativeBrightnessMonitor.poll(blackDisplayIDs: blackDisplayIDs)
-            updateNativeBrightnessTimer()
-        }
-        RunLoop.main.add(timer, forMode: .common)
-        nativeBrightnessTimer = timer
     }
 }
 

@@ -174,32 +174,6 @@ final class GammaMathTests: XCTestCase {
         XCTAssertEqual(BrightnessLevel.shortcutTarget(for: 0.8, isMain: false), 0)
     }
 
-    func testNativeBrightnessChangeRestoresOnlyMonitoredBlackDisplay() {
-        let displayID: CGDirectDisplayID = 1
-        var nativeBrightness = 0.4
-        var restoredDisplayIDs: [CGDirectDisplayID] = []
-        let monitor = NativeBrightnessMonitor(
-            readBrightness: { _ in nativeBrightness },
-            restoreBlackDisplay: { restoredDisplayIDs.append($0) }
-        )
-
-        XCTAssertTrue(monitor.beginMonitoring(displayID))
-        monitor.poll(blackDisplayIDs: [displayID])
-        XCTAssertTrue(restoredDisplayIDs.isEmpty)
-
-        nativeBrightness = 0.5
-        monitor.poll(blackDisplayIDs: [displayID])
-        XCTAssertEqual(restoredDisplayIDs, [displayID])
-
-        nativeBrightness = 0.6
-        monitor.poll(blackDisplayIDs: [displayID])
-        XCTAssertEqual(restoredDisplayIDs, [displayID, displayID])
-
-        nativeBrightness = 0.7
-        monitor.poll(blackDisplayIDs: [])
-        XCTAssertEqual(restoredDisplayIDs, [displayID, displayID])
-    }
-
     func testDisplayShortcutNormalizesAndFormatsModifiers() {
         let shortcut = DisplayShortcut(
             keyCode: UInt32(kVK_ANSI_D),

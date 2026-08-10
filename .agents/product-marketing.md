@@ -241,11 +241,11 @@
 | 单屏快捷键从黑屏点亮时使用主屏 `100%`、非主屏 `80%` 的默认目标 | `BrightnessLevel.shortcutTarget()`、`DisplayShortcut` |
 | 提供最后亮屏保护、恢复助手和异常退出恢复 | `BlackoutSafety`、`RecoveryHelperProcess`、Gamma 恢复标记 |
 | 支持登录时启动 | `LaunchAtLogin` 和应用 UI |
-| 当前自动测试通过 | 2026-08-09 本地运行 `swift test`，15 项测试通过 |
+| 当前自动测试通过 | 2026-08-10 本地运行 `swift test`，14 项测试通过 |
 
 自动测试和构建结果属于实现证据，不等于真实硬件兼容、任务持续运行或营销转化证据。
 
-当前 15 项测试主要覆盖 Gamma 数学、黑屏守卫、快捷键、持久化和显示器排列逻辑；未覆盖真实 Gamma 硬件、`idleDisplaySleepDisabled` 与 `idleSystemSleepDisabled` 的系统效果、恢复助手进程、屏幕保护程序、自动锁定或 AI／浏览器任务。
+当前 14 项测试主要覆盖 Gamma 数学、黑屏守卫、快捷键、持久化和显示器排列逻辑；未覆盖真实 Gamma 硬件、`idleDisplaySleepDisabled` 与 `idleSystemSleepDisabled` 的系统效果、恢复助手进程、屏幕保护程序、自动锁定或 AI／浏览器任务。
 
 ### Verified ecosystem facts
 

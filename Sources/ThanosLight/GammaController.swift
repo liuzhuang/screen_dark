@@ -1,6 +1,5 @@
 import AppKit
 import CoreGraphics
-import IOKit
 
 struct DisplayDescriptor: Identifiable, Equatable {
     let id: CGDirectDisplayID
@@ -117,100 +116,6 @@ enum BlackoutSafety {
             return BrightnessLevel.normalized(candidate) > 0
         }
         return hasVisibleDisplay || recoveryReady
-    }
-}
-
-enum SystemDisplayBrightness {
-    static func value(for displayID: CGDirectDisplayID) -> Double? {
-        guard
-            CGDisplayIsBuiltin(displayID) != 0,
-            let matching = IOServiceMatching("AppleCLCD2")
-        else {
-            return nil
-        }
-
-        // ponytail: scans only at 10 Hz while black; cache the service if profiling ever demands it.
-        var iterator: io_iterator_t = 0
-        guard IOServiceGetMatchingServices(kIOMainPortDefault, matching, &iterator) == KERN_SUCCESS else {
-            return nil
-        }
-        defer { IOObjectRelease(iterator) }
-
-        while true {
-            let service = IOIteratorNext(iterator)
-            guard service != 0 else {
-                return nil
-            }
-            let isExternal = property("external", of: service) as? Bool ?? false
-            if
-                !isExternal,
-                let brightness = property("IOMFBBrightnessLevel", of: service) as? NSNumber
-            {
-                IOObjectRelease(service)
-                return brightness.doubleValue
-            }
-            IOObjectRelease(service)
-        }
-    }
-
-    private static func property(_ key: String, of service: io_service_t) -> Any? {
-        IORegistryEntryCreateCFProperty(
-            service,
-            key as CFString,
-            kCFAllocatorDefault,
-            0
-        )?.takeRetainedValue()
-    }
-}
-
-final class NativeBrightnessMonitor {
-    private let readBrightness: (CGDirectDisplayID) -> Double?
-    private let restoreBlackDisplay: (CGDirectDisplayID) -> Void
-    private var previousBrightness: [CGDirectDisplayID: Double] = [:]
-
-    init(
-        readBrightness: @escaping (CGDirectDisplayID) -> Double?,
-        restoreBlackDisplay: @escaping (CGDirectDisplayID) -> Void
-    ) {
-        self.readBrightness = readBrightness
-        self.restoreBlackDisplay = restoreBlackDisplay
-    }
-
-    var hasMonitoredDisplays: Bool {
-        !previousBrightness.isEmpty
-    }
-
-    @discardableResult
-    func beginMonitoring(_ displayID: CGDirectDisplayID) -> Bool {
-        guard let brightness = readBrightness(displayID) else {
-            return false
-        }
-        previousBrightness[displayID] = brightness
-        return true
-    }
-
-    func stopMonitoring(_ displayID: CGDirectDisplayID) {
-        previousBrightness.removeValue(forKey: displayID)
-    }
-
-    func poll(blackDisplayIDs: Set<CGDirectDisplayID>) {
-        for displayID in Array(previousBrightness.keys) {
-            guard blackDisplayIDs.contains(displayID) else {
-                stopMonitoring(displayID)
-                continue
-            }
-            guard
-                let previous = previousBrightness[displayID],
-                let current = readBrightness(displayID)
-            else {
-                continue
-            }
-            previousBrightness[displayID] = current
-            guard abs(current - previous) > 0.0001 else {
-                continue
-            }
-            restoreBlackDisplay(displayID)
-        }
     }
 }
 
