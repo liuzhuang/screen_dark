@@ -6,7 +6,7 @@
     <title>Mac 屏幕变暗与外接显示器亮度调节｜ScreenDark</title>
     <meta
       name="description"
-      content="ScreenDark 是免费的 macOS 多显示器暗屏工具，可分别调暗 Mac 内建屏幕和外接显示器。支持单屏亮度调节、全部视觉黑屏，并在 0% 时请求阻止空闲系统睡眠。"
+      content="ScreenDark 是免费的 macOS 多显示器暗屏工具，可分别调暗 Mac 内建屏幕和外接显示器。支持单屏亮度调节、全部视觉黑屏，并在 0% 时请求保持所有显示器唤醒并阻止空闲系统睡眠。"
     >
     <meta name="robots" content="index,follow,max-image-preview:large">
     <meta name="theme-color" content="#0a0a0b">
@@ -26,7 +26,7 @@
     <meta property="og:title" content="Mac 屏幕变暗与外接显示器亮度调节｜ScreenDark">
     <meta
       property="og:description"
-      content="分别调暗 Mac 内建屏幕和外接显示器。支持单屏亮度调节、全部视觉黑屏，并在 0% 时请求阻止空闲系统睡眠。"
+      content="分别调暗 Mac 内建屏幕和外接显示器。支持单屏亮度调节、全部视觉黑屏，并在 0% 时请求保持所有显示器唤醒并阻止空闲系统睡眠。"
     >
     <meta property="og:url" content="https://screen-dark-bay.vercel.app/">
     <meta property="og:image" content="https://screen-dark-bay.vercel.app/assets/screendark-dual-display-neutral.webp">
@@ -37,7 +37,7 @@
     <meta name="twitter:title" content="Mac 屏幕变暗与外接显示器亮度调节｜ScreenDark">
     <meta
       name="twitter:description"
-      content="分别调暗 Mac 内建屏幕和外接显示器。支持单屏亮度调节、全部视觉黑屏，并在 0% 时请求阻止空闲系统睡眠。"
+      content="分别调暗 Mac 内建屏幕和外接显示器。支持单屏亮度调节、全部视觉黑屏，并在 0% 时请求保持所有显示器唤醒并阻止空闲系统睡眠。"
     >
     <meta name="twitter:image" content="https://screen-dark-bay.vercel.app/assets/screendark-dual-display-neutral.webp">
     <meta name="twitter:image:alt" content="ScreenDark 分别调节 Mac 内建屏幕和外接显示器的产品界面">
@@ -73,7 +73,7 @@
             <p class="eyebrow">免费的 macOS 多显示器暗屏工具</p>
             <h1 id="hero-title">将屏幕变暗</h1>
             <p class="hero-description">
-              ScreenDark（暗屏助手）分别调节内建屏幕和外接显示器。画面变黑时，请求 macOS 阻止空闲系统睡眠。
+              ScreenDark（暗屏助手）分别调节内建屏幕和外接显示器。任一屏幕为 0% 时，请求 macOS 保持所有显示器唤醒并阻止空闲系统睡眠。
             </p>
             <a class="button" href="https://github.com/liuzhuang/screen_dark/releases/latest">
               免费下载 Mac 版
@@ -134,9 +134,9 @@
 
             <dl class="limits-list">
               <div><dt>视觉黑屏</dt><dd>Gamma 只改变画面输出，背光和电源可能仍然开启。</dd></div>
-              <div><dt><code>0%</code> 才触发</dt><dd>任一屏幕为 <code>0%</code> 时，请求阻止空闲系统睡眠；<code>1%</code> 到 <code>99%</code> 不触发。</dd></div>
-              <div><dt>不主动锁屏</dt><dd>不会修改自动锁定设置，也不能作为隐私工具。仅在可信环境中使用。</dd></div>
-              <div><dt>不保证任务持续运行</dt><dd>主动睡眠、合盖、关机、断网和应用状态仍可能中断任务。</dd></div>
+              <div><dt><code>0%</code> 才触发</dt><dd>任一屏幕为 <code>0%</code> 时，请求保持所有显示器唤醒并阻止空闲系统睡眠；<code>1%</code> 到 <code>99%</code> 不触发。</dd></div>
+              <div><dt>不主动锁屏</dt><dd>不会修改自动锁定或屏幕保护程序设置，也不能作为隐私工具。仅在可信环境中使用。</dd></div>
+              <div><dt>不保证任务持续运行</dt><dd>屏幕保护程序、主动锁屏、主动睡眠、合盖、关机、断网和应用状态仍可能中断任务。</dd></div>
             </dl>
           </div>
 

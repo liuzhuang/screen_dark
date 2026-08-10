@@ -1347,7 +1347,7 @@ private final class DisplayStore: ObservableObject {
         let needsActivity = displays.contains(where: { $0.brightness == 0 })
         if needsActivity, idleSleepActivity == nil {
             idleSleepActivity = ProcessInfo.processInfo.beginActivity(
-                options: .idleSystemSleepDisabled,
+                options: [.idleSystemSleepDisabled, .idleDisplaySleepDisabled],
                 reason: "Keep background work running while a display is black"
             )
         } else if !needsActivity, let idleSleepActivity {

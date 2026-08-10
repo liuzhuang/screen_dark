@@ -1,0 +1,203 @@
+ScreenDark idle system sleep verification
+日志文件：/Users/liuzhuang/project/screen_dark/ScreenDark-idle-system-sleep-20260810-134647.log
+脚本 PID：28762
+布置时间：30 秒
+静默测试：180 秒
+
+===== PRE TIME =====
+2026-08-10 13:47:17 +0800
+
+===== MACOS =====
+ProductName:		macOS
+ProductVersion:		26.6.1
+BuildVersion:		25G76
+
+===== ARCH =====
+arm64
+
+===== RELEVANT PROCESSES =====
+804 /Applications/UURemote.app/Contents/MacOS/UURemoteDaemon -daemon
+1771 /Applications/Visual Studio Code.app/Contents/Frameworks/Electron Framework.framework/Helpers/chrome_crashpad_handler --no-rate-limit --monitor-self-annotation=ptype=crashpad-handler --database=/Users/liuzhuang/Library/Application Support/Code/Crashpad --url=appcenter://code?aid=de75e3cc-e22f-4f42-a03f-1409c21d8af8&uid=350b3e7d-d90a-4c8e-b3cd-27859d6b6c9a&iid=350b3e7d-d90a-4c8e-b3cd-27859d6b6c9a&sid=350b3e7d-d90a-4c8e-b3cd-27859d6b6c9a --annotation=_companyName=Microsoft --annotation=_productName=VSCode --annotation=_version=1.132.0 --annotation=plat=OS X --annotation=prod=Electron --annotation=ver=42.7.1 --handshake-fd=21
+1931 /Applications/Cursor.app/Contents/Frameworks/Electron Framework.framework/Helpers/chrome_crashpad_handler --no-rate-limit --monitor-self-annotation=ptype=crashpad-handler --database=/Users/liuzhuang/Library/Application Support/Cursor/Crashpad --url=https://f.a.k/e --annotation=_productName=Cursor --annotation=_version=3.15.6 --annotation=plat=OS X --annotation=prod=Electron --annotation=ver=40.10.3 --handshake-fd=21
+2796 Contents/Resources/ChatGPTHelper
+2800 /Applications/UURemote.app/Contents/MacOS/UURemoteService -agent
+2896 /Users/liuzhuang/Applications/ScreenDark.app/Contents/MacOS/ThanosLight
+2901 /System/Library/PrivateFrameworks/SoftwareUpdate.framework/Resources/SoftwareUpdateNotificationManager.app/Contents/MacOS/SoftwareUpdateNotificationManager
+2919 /Users/liuzhuang/Applications/ScreenDark.app/Contents/Helpers/ThanosLightRecovery.app/Contents/MacOS/ThanosLightRecovery
+3027 /Users/liuzhuang/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome chrome-extension://hehggadaopoacecdllhhajmbjkdcmajg/
+7850 /System/Library/PrivateFrameworks/RemoteManagement.framework/XPCServices/SoftwareUpdateSubscriber.xpc/Contents/MacOS/SoftwareUpdateSubscriber
+27903 /System/Library/PrivateFrameworks/MobileSoftwareUpdate.framework/Support/softwareupdated
+27904 /System/Library/PrivateFrameworks/MobileSoftwareUpdate.framework/Versions/A/XPCServices/com.apple.MobileSoftwareUpdate.CleanupPreparePathService.xpc/Contents/MacOS/com.apple.MobileSoftwareUpdate.CleanupPreparePathService
+
+===== POWER SETTINGS IN USE =====
+System-wide power settings:
+ SleepDisabled		0
+Currently in use:
+ standby              1
+ Sleep On Power Button 1
+ hibernatefile        /var/vm/sleepimage
+ powernap             1
+ networkoversleep     0
+ disksleep            10
+ sleep                1 (sleep prevented by powerd, ThanosLight)
+ hibernatemode        3
+ ttyskeepawake        1
+ displaysleep         1
+ tcpkeepalive         1
+ lowpowermode         0
+ womp                 1
+
+===== POWER SOURCE =====
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=38273123)	100%; charged; 0:00 remaining present: true
+
+===== ALL POWER PROFILES =====
+Battery Power:
+ Sleep On Power Button 1
+ lowpowermode         1
+ standby              1
+ ttyskeepawake        1
+ hibernatemode        3
+ powernap             1
+ hibernatefile        /var/vm/sleepimage
+ displaysleep         1
+ womp                 0
+ networkoversleep     0
+ sleep                1
+ lessbright           1
+ tcpkeepalive         1
+ disksleep            10
+AC Power:
+ Sleep On Power Button 1
+ lowpowermode         0
+ standby              1
+ ttyskeepawake        1
+ hibernatemode        3
+ powernap             1
+ hibernatefile        /var/vm/sleepimage
+ displaysleep         1
+ womp                 1
+ networkoversleep     0
+ sleep                1
+ tcpkeepalive         1
+ disksleep            10
+
+===== SCHEDULED POWER EVENTS =====
+
+===== ASSERTIONS BEFORE WAIT =====
+2026-08-10 13:47:17 +0800 
+Assertion status system-wide:
+   BackgroundTask                 0
+   ApplePushServiceTask           0
+   UserIsActive                   1
+   PreventUserIdleDisplaySleep    0
+   SoftwareUpdateTask             0
+   PreventSystemSleep             0
+   ExternalMedia                  0
+   PreventUserIdleSystemSleep     1
+   NetworkClientActive            1
+Listed by owning process:
+   pid 584(powerd): [0x00000169000183ab] 00:18:35 PreventUserIdleSystemSleep named: "Powerd - Prevent sleep while display is on"  
+   pid 643(WindowServer): [0x00000169000983aa] 00:00:03 UserIsActive named: "com.apple.iohideventsystem.queue.tickle serviceID:100000aca service:AppleMultitouchDevice product:Apple Internal Keyboard / Trackpad eventType:11"  
+	Timeout will fire in 56 secs Action=TimeoutActionRelease
+   pid 2896(ThanosLight): [0x000005bf0001880b] 00:00:05 PreventUserIdleSystemSleep named: "Keep background work running while a display is black"  
+   pid 663(cupsd): [0x000000a900118002] 00:21:48 NetworkClientActive named: "org.cups.cupsd"  
+Kernel Assertions: 0x108=BT-HID,MAGICWAKE
+   id=557  level=255 0x100=MAGICWAKE creat=2026/8/10 13:37 description=en0 owner=IOSkywalkNetworkBSDClient
+   id=558  level=255 0x8=BT-HID creat=2026/8/10 13:26 description=com.apple.driver.IOBluetoothHIDDriver owner=AppleBluetoothHIDKeyboard
+
+===== MEASUREMENT START =====
+2026-08-10 13:47:17
+接下来的 180 秒只执行一次 sleep，不轮询、不 ping。
+
+===== MEASUREMENT END =====
+2026-08-10 13:50:17
+
+===== POST TIME =====
+2026-08-10 13:50:17 +0800
+
+===== POWER SOURCE AFTER WAIT =====
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=38273123)	100%; charged; 0:00 remaining present: true
+
+===== ASSERTIONS AFTER WAIT =====
+2026-08-10 13:50:17 +0800 
+Assertion status system-wide:
+   BackgroundTask                 0
+   ApplePushServiceTask           0
+   UserIsActive                   0
+   PreventUserIdleDisplaySleep    0
+   SoftwareUpdateTask             0
+   PreventSystemSleep             0
+   ExternalMedia                  0
+   PreventUserIdleSystemSleep     1
+   NetworkClientActive            1
+Listed by owning process:
+   pid 663(cupsd): [0x000000a900118002] 00:24:48 NetworkClientActive named: "org.cups.cupsd"  
+   pid 655(runningboardd): [0x000006770001884d] 00:00:02 PreventUserIdleSystemSleep named: "osservice<com.apple.mobileassetd>;655-669-3818:com.apple.CFNetwork.StorageDB;655-669-3819:com.apple.CFNetwork.StorageDB"  
+	Created for PID: 669. 
+   pid 2896(ThanosLight): [0x000005bf0001880b] 00:03:05 PreventUserIdleSystemSleep named: "Keep background work running while a display is black"  
+Kernel Assertions: 0x108=BT-HID,MAGICWAKE
+   id=557  level=255 0x100=MAGICWAKE creat=2026/8/10 13:37 description=en0 owner=IOSkywalkNetworkBSDClient
+   id=558  level=255 0x8=BT-HID creat=2026/8/10 13:26 description=com.apple.driver.IOBluetoothHIDDriver owner=AppleBluetoothHIDKeyboard
+
+===== PMSET LOG DURING MEASUREMENT =====
+2026-08-10 13:48:13 +0800 Assertions          	PID 643(WindowServer) TimedOut UserIsActive "com.apple.iohideventsystem.queue.tickle serviceID:100000aca service:AppleMultitouchDevice product:Apple Internal Keyboard / Trackpad eventType:11" 00:01:00  id:0x0x9000083aa [System: PrevIdle DeclUser NetAcc kCPU kDisp]          
+2026-08-10 13:48:13 +0800 Assertions          	Summary- [System: PrevIdle NetAcc kCPU] Using AC(Charge: 100)          
+2026-08-10 13:48:13 +0800 Assertions          	PID 0(kernel_task) Released Kernel Assertion "CPU"  id:0x0x0 [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:13 +0800 Assertions          	PID 0(kernel_task) Released Kernel Assertion "CPU"  id:0x0x0 [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:23 +0800 Notification        	Display is turned off                                                      	          
+2026-08-10 13:48:23 +0800 Assertions          	PID 584(powerd) Released PreventUserIdleSystemSleep "Powerd - Prevent sleep while display is on" 00:19:42  id:0x0x1000083ab [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:23 +0800 Assertions          	PID 2896(ThanosLight) Summary PreventUserIdleSystemSleep "Keep background work running while a display is black" 00:01:12  id:0x0x10000880b [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:23 +0800 Assertions          	PID 663(cupsd) Summary NetworkClientActive "org.cups.cupsd" 00:22:54  id:0x0x1100008002 [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleDisplaySleep "com.apple.audio.context314.preventuseridledisplaysleep" 00:19:48  id:0x0x5000083bd [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleSystemSleep "com.apple.audio.context314.preventuseridlesleep" 00:19:48  id:0x0x1000083bc [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleDisplaySleep "com.apple.audio.context315.preventuseridledisplaysleep" 00:19:48  id:0x0x5000083bf [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleSystemSleep "com.apple.audio.context315.preventuseridlesleep" 00:19:48  id:0x0x1000083be [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleDisplaySleep "com.apple.audio.context312.preventuseridledisplaysleep" 00:19:48  id:0x0x5000083b9 [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleSystemSleep "com.apple.audio.context312.preventuseridlesleep" 00:19:48  id:0x0x1000083b8 [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleDisplaySleep "com.apple.audio.context320.preventuseridledisplaysleep" 00:19:48  id:0x0x5000083c9 [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleSystemSleep "com.apple.audio.context320.preventuseridlesleep" 00:19:48  id:0x0x1000083c8 [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleDisplaySleep "com.apple.audio.context319.preventuseridledisplaysleep" 00:19:48  id:0x0x5000083c7 [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleSystemSleep "com.apple.audio.context319.preventuseridlesleep" 00:19:48  id:0x0x1000083c6 [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleDisplaySleep "com.apple.audio.context318.preventuseridledisplaysleep" 00:19:48  id:0x0x5000083c5 [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleSystemSleep "com.apple.audio.context318.preventuseridlesleep" 00:19:48  id:0x0x1000083c4 [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleDisplaySleep "com.apple.audio.context313.preventuseridledisplaysleep" 00:19:48  id:0x0x5000083bb [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleSystemSleep "com.apple.audio.context313.preventuseridlesleep" 00:19:48  id:0x0x1000083ba [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleDisplaySleep "com.apple.audio.context321.preventuseridledisplaysleep" 00:19:48  id:0x0x5000083cb [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleSystemSleep "com.apple.audio.context321.preventuseridlesleep" 00:19:48  id:0x0x1000083ca [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleDisplaySleep "com.apple.audio.context316.preventuseridledisplaysleep" 00:19:48  id:0x0x5000083c1 [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleSystemSleep "com.apple.audio.context316.preventuseridlesleep" 00:19:48  id:0x0x1000083c0 [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleDisplaySleep "com.apple.audio.context308.preventuseridledisplaysleep" 00:19:48  id:0x0x5000083b1 [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleSystemSleep "com.apple.audio.context308.preventuseridlesleep" 00:19:48  id:0x0x1000083b0 [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleDisplaySleep "com.apple.audio.context322.preventuseridledisplaysleep" 00:19:48  id:0x0x5000083cd [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleSystemSleep "com.apple.audio.context322.preventuseridlesleep" 00:19:48  id:0x0x1000083cc [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleDisplaySleep "com.apple.audio.context339.preventuseridledisplaysleep" 00:18:43  id:0x0x50000840d [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleSystemSleep "com.apple.audio.context339.preventuseridlesleep" 00:18:43  id:0x0x10000840c [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleDisplaySleep "com.apple.audio.context347.preventuseridledisplaysleep" 00:18:12  id:0x0x500008438 [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleSystemSleep "com.apple.audio.context347.preventuseridlesleep" 00:18:12  id:0x0x100008437 [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleDisplaySleep "com.apple.audio.context403.preventuseridledisplaysleep" 00:16:14  id:0x0x5000084f1 [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleSystemSleep "com.apple.audio.context403.preventuseridlesleep" 00:16:14  id:0x0x1000084f0 [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleDisplaySleep "com.apple.audio.context317.preventuseridledisplaysleep" 00:19:48  id:0x0x5000083c3 [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleSystemSleep "com.apple.audio.context317.preventuseridlesleep" 00:19:48  id:0x0x1000083c2 [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleDisplaySleep "com.apple.audio.context363.preventuseridledisplaysleep" 00:17:30  id:0x0x50000846f [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleSystemSleep "com.apple.audio.context363.preventuseridlesleep" 00:17:30  id:0x0x10000846e [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleDisplaySleep "com.apple.audio.context331.preventuseridledisplaysleep" 00:19:44  id:0x0x5000083e1 [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleSystemSleep "com.apple.audio.context331.preventuseridlesleep" 00:19:44  id:0x0x1000083e0 [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleDisplaySleep "com.apple.audio.context311.preventuseridledisplaysleep" 00:19:48  id:0x0x5000083b7 [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleSystemSleep "com.apple.audio.context311.preventuseridlesleep" 00:19:48  id:0x0x1000083b6 [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleDisplaySleep "com.apple.audio.context355.preventuseridledisplaysleep" 00:18:12  id:0x0x500008446 [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleSystemSleep "com.apple.audio.context355.preventuseridlesleep" 00:18:12  id:0x0x100008445 [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleDisplaySleep "com.apple.audio.context475.preventuseridledisplaysleep" 00:14:58  id:0x0x5000085a3 [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleSystemSleep "com.apple.audio.context475.preventuseridlesleep" 00:14:58  id:0x0x1000085a2 [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleDisplaySleep "com.apple.audio.context309.preventuseridledisplaysleep" 00:19:48  id:0x0x5000083b3 [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleSystemSleep "com.apple.audio.context309.preventuseridlesleep" 00:19:48  id:0x0x1000083b2 [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleDisplaySleep "com.apple.audio.context310.preventuseridledisplaysleep" 00:19:48  id:0x0x5000083b5 [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleSystemSleep "com.apple.audio.context310.preventuseridlesleep" 00:19:48  id:0x0x1000083b4 [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleDisplaySleep "com.apple.audio.context323.preventuseridledisplaysleep" 00:19:48  id:0x0x5000083cf [System: PrevIdle NetAcc kCPU]          
+2026-08-10 13:48:32 +0800 Assertions          	PID 678(coreaudiod) Released PreventUserIdleSystemSleep "com.apple.audio.context323.preventuseridlesleep" 00:19:48  id:0x0x1000083ce [System: PrevIdle NetAcc kCPU]          
+
+
+===== COLLECTION COMPLETE =====
+2026-08-10 13:50:18 +0800
+请把这个日志文件发给我：/Users/liuzhuang/project/screen_dark/ScreenDark-idle-system-sleep-20260810-134647.log

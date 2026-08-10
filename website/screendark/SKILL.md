@@ -16,7 +16,7 @@ Operate ScreenDark only after the user explicitly asks to change a display. Trea
 
 If the user asks to darken every display, confirm the fixed recovery shortcut before setting the last visible display to `0%`.
 
-ScreenDark requests `.idleSystemSleepDisabled` only while at least one display is at `0%`. Brightness values from `1%` to `99%` do not trigger that request. ScreenDark does not actively lock the Mac, but macOS automatic lock, the screen saver, app state, permissions, and capture paths still determine whether other work continues.
+ScreenDark requests both `.idleSystemSleepDisabled` and `.idleDisplaySleepDisabled` only while at least one display is at `0%`. The display-sleep request is system-wide, so one display at `0%` keeps every display awake at the system level. Brightness values from `1%` to `99%` do not trigger those requests. ScreenDark does not actively lock the Mac or disable the screen saver, so manual lock, the screen saver, app state, permissions, and capture paths still determine whether other work continues.
 
 ## Restore displays
 
