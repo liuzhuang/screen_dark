@@ -370,7 +370,7 @@ private struct DisplayMenu: View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("ScreenDark")
+                    Text("暗屏助手")
                         .font(.headline)
                     if !store.displays.isEmpty {
                         Text("拖动设备屏幕调整亮度")
@@ -458,7 +458,7 @@ private struct DisplayMenu: View {
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)
-                Button("退出 ScreenDark") {
+                Button("退出暗屏助手") {
                     store.restoreSystemGammaAll()
                     NSApplication.shared.terminate(nil)
                 }

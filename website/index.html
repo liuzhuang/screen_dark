@@ -3,12 +3,13 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Mac 黑屏不休眠，让任务继续跑｜ScreenDark</title>
+    <title>Mac 屏幕变暗与外接显示器亮度调节｜ScreenDark</title>
     <meta
       name="description"
-      content="ScreenDark 让 Mac 黑屏不休眠，并可分别控制内建屏幕与外接显示器。离开工位时，避免因主动锁屏或空闲系统睡眠中断 Codex、Claude Code 和 Computer Use。"
+      content="ScreenDark 是免费的 macOS 多显示器暗屏工具，可分别调暗 Mac 内建屏幕和外接显示器。支持单屏亮度调节、全部视觉黑屏，并在 0% 时请求阻止空闲系统睡眠。"
     >
-    <meta name="theme-color" content="#08090b">
+    <meta name="robots" content="index,follow,max-image-preview:large">
+    <meta name="theme-color" content="#0a0a0b">
     <meta name="color-scheme" content="light dark">
     <script>
       try {
@@ -22,12 +23,27 @@
     <meta property="og:type" content="website">
     <meta property="og:locale" content="zh_CN">
     <meta property="og:site_name" content="ScreenDark">
-    <meta property="og:title" content="Mac 黑屏不休眠，让任务继续跑｜ScreenDark">
+    <meta property="og:title" content="Mac 屏幕变暗与外接显示器亮度调节｜ScreenDark">
     <meta
       property="og:description"
-      content="分别控制 Mac 内建屏幕与外接显示器，避免因主动锁屏或空闲系统睡眠中断当前任务。"
+      content="分别调暗 Mac 内建屏幕和外接显示器。支持单屏亮度调节、全部视觉黑屏，并在 0% 时请求阻止空闲系统睡眠。"
     >
+    <meta property="og:url" content="https://screen-dark-bay.vercel.app/">
+    <meta property="og:image" content="https://screen-dark-bay.vercel.app/assets/screendark-dual-display-neutral.webp">
+    <meta property="og:image:width" content="1788">
+    <meta property="og:image:height" content="880">
+    <meta property="og:image:alt" content="ScreenDark 分别调节 Mac 内建屏幕和外接显示器的产品界面">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Mac 屏幕变暗与外接显示器亮度调节｜ScreenDark">
+    <meta
+      name="twitter:description"
+      content="分别调暗 Mac 内建屏幕和外接显示器。支持单屏亮度调节、全部视觉黑屏，并在 0% 时请求阻止空闲系统睡眠。"
+    >
+    <meta name="twitter:image" content="https://screen-dark-bay.vercel.app/assets/screendark-dual-display-neutral.webp">
+    <meta name="twitter:image:alt" content="ScreenDark 分别调节 Mac 内建屏幕和外接显示器的产品界面">
+    <link rel="canonical" href="https://screen-dark-bay.vercel.app/">
     <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+    <link rel="preload" href="assets/screendark-dual-display-neutral.webp" as="image" type="image/webp">
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
@@ -37,17 +53,12 @@
       <div class="container header-inner">
         <a class="brand" href="#top" aria-label="返回 ScreenDark 首页顶部">
           <img src="assets/logo.svg" width="28" height="28" alt="">
-          <span>ScreenDark</span>
+          <span>ScreenDark <small>暗屏助手</small></span>
         </a>
         <nav class="site-nav" aria-label="主导航">
-          <a href="#how">使用</a>
-          <a href="#install">安装</a>
-          <a
-            href="screendark/SKILL.md"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="查看 ScreenDark Skill（新标签页）"
-          >Skill</a>
+          <a href="#scenarios">使用场景</a>
+          <a class="use-link" href="#limits">实现机制</a>
+          <a href="#download">下载</a>
           <button class="theme-toggle" type="button" aria-label="切换到亮色模式" title="切换到亮色模式">
             <span class="theme-toggle-symbol" aria-hidden="true"></span>
           </button>
@@ -56,104 +67,103 @@
     </header>
 
     <main id="main" tabindex="-1">
-      <section class="hero" id="top" aria-labelledby="hero-title">
-        <div class="container">
+      <section class="screen hero" id="top" aria-labelledby="hero-title">
+        <div class="container hero-layout">
           <div class="hero-copy">
-            <p class="eyebrow">Mac 多显示器黑屏工具</p>
-            <h1 id="hero-title">Mac 黑屏不休眠，<br>任务继续跑。</h1>
+            <p class="eyebrow">免费的 macOS 多显示器暗屏工具</p>
+            <h1 id="hero-title">将屏幕变暗</h1>
             <p class="hero-description">
-              锁屏可能中断 Codex、Claude Code 和 Computer Use；调暗内建屏幕，外接显示器却往往还亮着。ScreenDark 不主动锁屏，只让选中的内建或外接显示器变暗；全部显示器变暗时会阻止空闲系统睡眠，帮助当前任务继续运行。
+              ScreenDark（暗屏助手）分别调节内建屏幕和外接显示器。画面变黑时，请求 macOS 阻止空闲系统睡眠。
             </p>
-            <a class="button" href="#install">安装 ScreenDark</a>
+            <a class="button" href="https://github.com/liuzhuang/screen_dark/releases/latest">
+              免费下载 Mac 版
+            </a>
+            <ul class="hero-meta" aria-label="系统要求">
+              <li>macOS 13+</li>
+              <li>Apple Silicon 安装包</li>
+              <li>外接显示器需支持 Gamma 调节</li>
+            </ul>
           </div>
 
-          <figure class="product-visual">
-            <div class="display-pair">
-              <img
-                src="assets/display-laptop-bright.png"
-                width="520"
-                height="430"
-                alt="ScreenDark 控制的 Mac 内建屏幕保持亮屏"
-                fetchpriority="high"
-              >
-              <img
-                src="assets/display-monitor-dark.png"
-                width="520"
-                height="430"
-                alt="ScreenDark 控制的 Mac 外接显示器已黑屏"
-              >
-            </div>
-            <figcaption>产品示意：内建屏幕保持亮屏，外接显示器已黑屏；两块屏幕可以分别控制。</figcaption>
+          <figure class="hero-visual">
+            <img
+              class="hero-product-image"
+              src="assets/screendark-dual-display-neutral.webp"
+              width="1788"
+              height="880"
+              alt="ScreenDark 分别调节外接显示器和内建屏幕的产品界面"
+              fetchpriority="high"
+            >
           </figure>
         </div>
       </section>
 
-      <section class="section how-section" id="how" aria-labelledby="how-title">
+      <section class="screen scenarios-screen" id="scenarios" aria-labelledby="scenarios-title">
         <div class="container">
           <div class="section-heading">
-            <p class="section-label">使用方法</p>
-            <h2 id="how-title">一键黑屏，再一键点亮。</h2>
+            <p class="eyebrow">两种场景</p>
+            <h2 id="scenarios-title">只暗一块</h2>
           </div>
 
-          <ol class="steps">
-            <li>
-              <span aria-hidden="true">1</span>
-              <div>
-                <h3>选择需要黑屏的显示器</h3>
-                <p>点击内建或外接显示器，可分别控制。</p>
-              </div>
-            </li>
-            <li>
-              <span aria-hidden="true">2</span>
-              <div>
-                <h3>按快捷键点亮全部显示器</h3>
-                <p>按下 ⌃⌥⌘B，恢复各屏此前的亮度。</p>
-              </div>
-            </li>
-          </ol>
+          <div class="scenario-grid">
+            <article class="scenario-card">
+              <h3>外接屏幕太刺眼</h3>
+              <p>单独调暗外接显示器</p>
+            </article>
 
-          <aside class="boundary" aria-label="使用边界">
-            <strong>显示器变暗不等于锁屏。</strong>
-            <p>显示器变暗期间会阻止空闲系统睡眠，但不会阻止别人操作 Mac，请仅在可信环境中使用。</p>
-          </aside>
+            <article class="scenario-card">
+              <p class="scenario-kicker">手机续接 Codex</p>
+              <h3>保持黑屏</h3>
+              <p>用手机查看、指导和审批本机 Codex 会话。Remote 属于 ChatGPT，需先完成配置；Mac 须保持唤醒、联网并运行桌面 App。</p>
+              <a
+                class="text-link"
+                href="https://learn.chatgpt.com/docs/remote-connections"
+                target="_blank"
+                rel="noopener noreferrer"
+              >Remote 使用要求 <span aria-hidden="true">↗</span></a>
+            </article>
+          </div>
         </div>
       </section>
 
-      <section class="section install-section" id="install" aria-labelledby="install-title">
-        <div class="container">
-          <div class="section-heading">
-            <p class="section-label">安装</p>
-            <h2 id="install-title">从源码安装。</h2>
+      <section class="screen limits-screen" id="limits" aria-labelledby="limits-title">
+        <div class="container limits-grid">
+          <div class="limits-copy">
+            <p class="eyebrow">注意</p>
+            <h2 id="limits-title">不是待机也不是关闭显示器</h2>
+
+            <dl class="limits-list">
+              <div><dt>视觉黑屏</dt><dd>Gamma 只改变画面输出，背光和电源可能仍然开启。</dd></div>
+              <div><dt><code>0%</code> 才触发</dt><dd>任一屏幕为 <code>0%</code> 时，请求阻止空闲系统睡眠；<code>1%</code> 到 <code>99%</code> 不触发。</dd></div>
+              <div><dt>不主动锁屏</dt><dd>不会修改自动锁定设置，也不能作为隐私工具。仅在可信环境中使用。</dd></div>
+              <div><dt>不保证任务持续运行</dt><dd>主动睡眠、合盖、关机、断网和应用状态仍可能中断任务。</dd></div>
+            </dl>
           </div>
 
-          <div class="install-grid">
-            <article class="install-card">
-              <p class="install-kind">ScreenDark for Mac</p>
-              <h3>运行安装脚本</h3>
-              <p>获取源码后，在项目根目录运行：</p>
-              <pre><code>bash reinstall.sh</code></pre>
-              <p class="install-note">需要 macOS 13+ 和 Xcode Command Line Tools。脚本会构建 Release、安装到 <code>~/Applications</code> 并自动启动。</p>
-            </article>
-
-            <article class="install-card" id="skill">
-              <p class="install-kind">Codex Skill</p>
-              <h3>让 Codex 识别显示器变暗操作</h3>
-              <p>Skill 包含单块显示器变暗、全部恢复和安全边界。</p>
-              <a class="skill-link" href="screendark/SKILL.md" target="_blank" rel="noopener noreferrer">
-                查看 ScreenDark Skill
-                <span aria-hidden="true">↗</span>
-              </a>
-              <p class="install-note">将文件保存为 <code>~/.codex/skills/screendark/SKILL.md</code>，新建任务后即可使用。</p>
-            </article>
-          </div>
+          <aside class="download-card" id="download" aria-labelledby="download-title">
+            <div class="recovery-note">
+              <span>黑屏前记住</span>
+              <kbd>⌃⌥⌘B</kbd>
+              <strong>点亮全部</strong>
+            </div>
+            <h3 id="download-title">免费 Mac 版</h3>
+            <p>当前预构建安装包面向 Apple Silicon。</p>
+            <a class="button" href="https://github.com/liuzhuang/screen_dark/releases/latest">
+              免费下载最新版本
+            </a>
+            <p class="install-warning">当前为 ad-hoc 签名。首次启动时，可能需要在 Finder 中右键应用并选择「打开」。</p>
+            <a class="skill-link" href="screendark/SKILL.md" target="_blank" rel="noopener noreferrer">
+              查看 ScreenDark Skill <span aria-hidden="true">↗</span>
+            </a>
+          </aside>
         </div>
       </section>
     </main>
 
     <footer class="site-footer">
       <div class="container footer-inner">
-        <p>ScreenDark</p>
-        <p>macOS 13+ · 显示器需支持 Gamma 调节</p>
+        <p><strong>ScreenDark</strong><span>暗屏助手</span></p>
+        <p>本地运行的 macOS 菜单栏工具</p>
       </div>
     </footer>
 
@@ -167,7 +177,7 @@
         const label = isDark ? "切换到亮色模式" : "切换到暗色模式";
         themeToggle.setAttribute("aria-label", label);
         themeToggle.title = label;
-        themeColor.content = isDark ? "#08090b" : "#f7f7f8";
+        themeColor.content = isDark ? "#0a0a0b" : "#f7f7f6";
       }
 
       themeToggle.addEventListener("click", () => {
