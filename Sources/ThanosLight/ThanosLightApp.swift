@@ -1,6 +1,7 @@
 import AppKit
 import Carbon.HIToolbox
 import CoreGraphics
+import Darwin
 import ServiceManagement
 import SwiftUI
 
@@ -396,23 +397,6 @@ private struct DisplayMenu: View {
             } else {
                 displayControls
             }
-
-            Divider()
-
-            HStack(spacing: 24) {
-                Label("黑屏恢复请使用快捷键", systemImage: "keyboard")
-                    .foregroundStyle(.secondary)
-                    .help("使用单屏快捷键或 ⌃⌥⌘B 点亮显示器")
-                Spacer(minLength: 12)
-                Label(
-                    store.recoveryHelperReady ? "安全保护开启" : "安全保护未开启",
-                    systemImage: store.recoveryHelperReady
-                        ? "checkmark.shield"
-                        : "exclamationmark.shield"
-                )
-                .foregroundStyle(store.recoveryHelperReady ? Color.secondary : Color.orange)
-            }
-            .font(.caption)
 
             if let statusMessage = store.statusMessage {
                 Label(statusMessage, systemImage: "exclamationmark.triangle.fill")
@@ -869,6 +853,10 @@ struct DisplayState: Identifiable, Equatable {
     var brightnessToRestore: Double {
         brightness == 0 ? brightnessBeforeBlackout : brightness
     }
+
+    var isBlackBuiltIn: Bool {
+        isBuiltIn && brightness == 0
+    }
 }
 
 enum BrightnessPersistence {
@@ -888,9 +876,40 @@ enum BrightnessPersistence {
 }
 
 private final class DisplayStore: ObservableObject {
+    private typealias DisplayServicesRegister = @convention(c) (
+        CGDirectDisplayID, UnsafeMutableRawPointer?, CFString, CFNotificationCallback
+    ) -> Int32
+    private typealias DisplayServicesUnregister = @convention(c) (
+        CGDirectDisplayID, UnsafeMutableRawPointer?, CFString
+    ) -> Int32
+
     private static let gammaRecoveryKey = "gammaTablesNeedRecovery"
     private static let shortcutAssignmentsKey = "displayShortcuts"
     private static let savedBrightnessKey = "displayBrightness"
+    private static let userBrightnessKey = "DisplayServicesUserBrightness" as CFString
+    private static let userBrightnessObserver = NSObject()
+    private static weak var activeUserBrightnessStore: DisplayStore?
+    private static let userBrightnessCallback: CFNotificationCallback = { _, _, _, _, _ in
+        DispatchQueue.main.async { activeUserBrightnessStore?.restoreBlackBuiltInDisplay() }
+    }
+    // ponytail: the store and this registration live for the process lifetime.
+    private static let displayServicesNotifications: (
+        register: DisplayServicesRegister,
+        unregister: DisplayServicesUnregister
+    )? = {
+        let path = "/System/Library/PrivateFrameworks/DisplayServices.framework/DisplayServices"
+        guard
+            let handle = dlopen(path, RTLD_NOW | RTLD_LOCAL),
+            let register = dlsym(handle, "DisplayServicesRegisterForNotification"),
+            let unregister = dlsym(handle, "DisplayServicesUnregisterForNotification")
+        else {
+            return nil
+        }
+        return (
+            unsafeBitCast(register, to: DisplayServicesRegister.self),
+            unsafeBitCast(unregister, to: DisplayServicesUnregister.self)
+        )
+    }()
 
     @Published private(set) var displays: [DisplayState] = []
     @Published private(set) var recoveryHelperReady = false
@@ -908,6 +927,7 @@ private final class DisplayStore: ObservableObject {
     private var workspaceObserver: NSObjectProtocol?
     private var idleSleepActivity: NSObjectProtocol?
     private var shortcutEventMonitor: Any?
+    private var userBrightnessDisplayID: CGDirectDisplayID?
     private var savedBrightness: [String: Double]
 
     init() {
@@ -918,12 +938,14 @@ private final class DisplayStore: ObservableObject {
             UserDefaults.standard.data(forKey: Self.savedBrightnessKey)
         )
         recoverGammaAfterUncleanExitIfNeeded()
+        Self.activeUserBrightnessStore = self
         reloadDisplayList()
         observeLifecycle()
         startRecoveryHelper()
     }
 
     deinit {
+        unregisterUserBrightnessNotification()
         if let shortcutEventMonitor {
             NSEvent.removeMonitor(shortcutEventMonitor)
         }
@@ -1145,6 +1167,47 @@ private final class DisplayStore: ObservableObject {
             setBrightness(brightness, for: displayID)
         }
         reconcileShortcutRegistrations()
+        registerUserBrightnessNotifications()
+    }
+
+    private func registerUserBrightnessNotifications() {
+        let nextDisplayID = displays.first(where: { $0.isBuiltIn })?.id
+        guard nextDisplayID != userBrightnessDisplayID else {
+            return
+        }
+        unregisterUserBrightnessNotification()
+        guard let displayID = nextDisplayID, let functions = Self.displayServicesNotifications else {
+            return
+        }
+        let observer = Unmanaged.passUnretained(Self.userBrightnessObserver).toOpaque()
+        guard functions.register(
+            displayID,
+            observer,
+            Self.userBrightnessKey,
+            Self.userBrightnessCallback
+        ) == 0 else {
+            return
+        }
+        userBrightnessDisplayID = displayID
+    }
+
+    private func unregisterUserBrightnessNotification() {
+        guard
+            let displayID = userBrightnessDisplayID,
+            let unregister = Self.displayServicesNotifications?.unregister
+        else {
+            return
+        }
+        let observer = Unmanaged.passUnretained(Self.userBrightnessObserver).toOpaque()
+        _ = unregister(displayID, observer, Self.userBrightnessKey)
+        userBrightnessDisplayID = nil
+    }
+
+    private func restoreBlackBuiltInDisplay() {
+        guard let displayID = displays.first(where: { $0.isBlackBuiltIn })?.id else {
+            return
+        }
+        setBrightness(1, for: displayID)
     }
 
     private func persistShortcuts() {

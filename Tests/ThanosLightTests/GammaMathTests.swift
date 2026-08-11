@@ -36,6 +36,22 @@ final class GammaMathTests: XCTestCase {
         XCTAssertEqual(display.brightnessToRestore, 0.4)
     }
 
+    func testUserBrightnessChangeOnlyWakesBlackBuiltInDisplay() {
+        func display(isBuiltIn: Bool, brightness: Double) -> DisplayState {
+            DisplayState(
+                id: 1,
+                name: "Display",
+                isMain: isBuiltIn,
+                isBuiltIn: isBuiltIn,
+                brightness: brightness
+            )
+        }
+
+        XCTAssertTrue(display(isBuiltIn: true, brightness: 0).isBlackBuiltIn)
+        XCTAssertFalse(display(isBuiltIn: true, brightness: 0.5).isBlackBuiltIn)
+        XCTAssertFalse(display(isBuiltIn: false, brightness: 0).isBlackBuiltIn)
+    }
+
     func testBrightnessPersistenceKeepsOnlyVisibleLevels() {
         let encoded = BrightnessPersistence.encode([
             "display-a": 0.4,
